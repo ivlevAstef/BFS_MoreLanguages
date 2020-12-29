@@ -13,9 +13,9 @@ Avg. Time: 23250 ms
 ### Swift (Debug)
 Avg. Time: Infinity :D
 ### Swift (Release)
-Avg. Time: 15450 ms
+Avg. Time: 15000 ms
 
 ### CPP (Debug)
 Avg. Time: Infinity :D
 ### CPP (Release)
-Avg. Time: 9750 ms
+Avg. Time: 6100 ms

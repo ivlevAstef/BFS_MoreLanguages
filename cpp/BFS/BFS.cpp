@@ -9,20 +9,17 @@
 #include <algorithm>
 #include "BFS.hpp"
 
-struct PointInfo {
-    Point pos;
-    int length;
-};
-
 static const Point offsets[4] = { {1, 0}, {-1, 0}, {0, 1}, {0, -1} };
 
 BFS::BFS(int width, int height): width(width), height(height) {
     walls = (bool*)calloc(width * height, sizeof(bool));
     visited = (bool*)calloc(width * height, sizeof(bool));
+
+    pointsStack = (PointInfo*)calloc(width * height, sizeof(PointInfo));
 }
 
 void BFS::generateWalls() {
-    memset(walls, 0, width * height * sizeof(bool));
+    memset(walls, false, width * height * sizeof(bool));
 
     for (int index = 0; index < width; ++index) {
         walls[index] = true;
@@ -47,17 +44,15 @@ void BFS::generateWalls() {
     }
 }
 std::vector<Point> BFS::path(Point from, Point to) {
-    memset(visited, 0, width * height * sizeof(bool));
-
-    std::vector<PointInfo> points;
-    points.reserve(width * height);
+    memset(visited, false, width * height * sizeof(bool));
 
     visited[from.x + from.y * width] = true;
-    points.push_back({ from, 0 });
+    pointsStack[0] = { from, 0 };
 
     int index = 0;
-    while (index < points.size()) {
-        PointInfo info = points[index];
+    int pointsCount = 1;
+    while (index < pointsCount) {
+        PointInfo info = pointsStack[index];
         if (info.pos.x == to.x && info.pos.y == to.y) {
             break;
         }
@@ -72,22 +67,23 @@ std::vector<Point> BFS::path(Point from, Point to) {
             }
             visited[p.x + p.y * width] = true;
 
-            points.push_back({ p, info.length + 1 });
+            pointsStack[pointsCount] = { p, info.length + 1 };
+            ++pointsCount;
         }
     }
 
-    if (index >= points.size()) {
+    if (index >= pointsCount) {
         return std::vector<Point>();
     }
 
     std::vector<Point> result;
-    result.reserve(points[index].length);
-    result.push_back(points[index].pos);
+    result.reserve(pointsStack[index].length);
+    result.push_back(pointsStack[index].pos);
 
-    int currentLength = points[index].length;
+    int currentLength = pointsStack[index].length;
 
     while (index > 0) {
-        PointInfo info = points[index];
+        PointInfo info = pointsStack[index];
         --index;
 
         if (info.length != currentLength - 1) {

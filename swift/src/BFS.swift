@@ -62,8 +62,11 @@ final class BFS {
         var visited = [Bool](repeating: false, count: width * height)
         visited[from.x + from.y * width] = true
 
-        var points: [PointInfo] = [PointInfo(pos: from, length: 0)]
+        var points = ContiguousArray<PointInfo>()
         points.reserveCapacity(width * height)
+
+        points.append(PointInfo(pos: from, length: 0))
+
         var index = 0
 
         while index < points.count {
@@ -89,7 +92,7 @@ final class BFS {
             return nil
         }
 
-        var result: [Point] = []
+        var result = ContiguousArray<Point>()
         result.reserveCapacity(points[index].length)
 
         result.append(points[index].pos)
@@ -103,10 +106,10 @@ final class BFS {
                 continue
             }
 
-            result.insert(info.pos, at: 0)
+            result.append(info.pos)
             currentLength = info.length
         }
 
-        return result
+        return result.reversed()
     }
 }
