@@ -1,17 +1,9 @@
-data class Point(val x: Int, val y: Int) {
-    override fun equals(other: Any?): Boolean {
-        return other?.let { obj ->
-            if (obj is Point) {
-                return obj.x == this.x && obj.y == this.y
-            }
-            return false
-        } ?: false
-    }
-}
+data class Point(val x: Int, val y: Int)
 
 class BFS(val width: Int, val height: Int) {
     private val walls: Array<Boolean> = Array(width * height, { false })
     private val visited: Array<Boolean> = Array(width * height, { false })
+    private val depth: Array<Int> = Array(width * height, { 0 })
 
     fun generateWalls() {
         for (index in 0 until width * height) {
@@ -41,66 +33,60 @@ class BFS(val width: Int, val height: Int) {
     }
 
     fun path(from: Point, to: Point): List<Point>? {
-        val toX = to.x
-        val toY = to.y
         val offsets = arrayOf(Point(1, 0), Point(-1, 0), Point(0, 1), Point(0, -1))
-
-        val offsetsX = arrayOf(1, -1, 0, 0);
-        val offsetsY = arrayOf(0, 0, 1, -1);
 
         for (index in 0 until width * height) {
             visited[index] = false
         }
         visited[from.x + from.y * width] = true
+        depth[from.x + from.y * width] = 0
 
-        val pointsX = mutableListOf(from.x)
-        val pointsY = mutableListOf(from.y)
-        val pointsL = mutableListOf(0)
+        val points = mutableListOf(from)
         var index = 0
 
-        while (index < pointsX.count()) {
-            val posX = pointsX[index]
-            val posY = pointsY[index]
-            val length = pointsL[index]
+        while (index < points.count()) {
+            val pos = points[index]
 
-            if (toX == posX && toY == posY) {
+            if (to.x == pos.x && to.y == pos.y) {
                 break
             }
 
             index += 1
 
-            for (oindex in 0..3) {
-                val nX = posX + offsetsX[oindex]
-                val nY = posY + offsetsY[oindex]
+            val length = depth[pos.x + pos.y * width]
+            for (offset in offsets) {
+                val nX = pos.x + offset.x
+                val nY = pos.y + offset.y
                 if (visited[nX + nY * width] || walls[nX + nY * width]) {
                     continue
                 }
                 visited[nX + nY * width] = true
 
-                pointsX.add(nX)
-                pointsY.add(nY)
-                pointsL.add(length + 1)
+                points.add(Point(nX, nY))
+                depth[nX + nY * width] = length + 1
             }
         }
 
-        if (index >= pointsX.count()) {
+        if (index >= points.count()) {
             return null
         }
 
         val result = mutableListOf<Point>()
 
-        result.add(Point(pointsX[index], pointsY[index]))
-        var currentLength = pointsL[index]
+        result.add(points[index])
+        var currentLength = depth[points[index].x + points[index].y * width]
 
         while (index > 0) {
+            val pos = points[index]
+            val length = depth[pos.x + pos.y * width]
             index -= 1
 
-            if (pointsL[index] != currentLength - 1) {
+            if (length != currentLength - 1) {
                 continue
             }
 
-            result.add(Point(pointsX[index], pointsY[index]))
-            currentLength = pointsL[index]
+            result.add(points[index])
+            currentLength = length
         }
 
         return result.reversed()

@@ -52,7 +52,7 @@ std::vector<Point> BFS::path(Point from, Point to) {
     int index = 0;
     int pointsCount = 1;
     while (index < pointsCount) {
-        PointInfo info = pointsStack[index];
+        const PointInfo& info = pointsStack[index];
         if (info.pos.x == to.x && info.pos.y == to.y) {
             break;
         }
@@ -83,7 +83,7 @@ std::vector<Point> BFS::path(Point from, Point to) {
     int currentLength = pointsStack[index].length;
 
     while (index > 0) {
-        PointInfo info = pointsStack[index];
+        const PointInfo& info = pointsStack[index];
         --index;
 
         if (info.length != currentLength - 1) {

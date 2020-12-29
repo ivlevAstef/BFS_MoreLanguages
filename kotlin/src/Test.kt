@@ -2,6 +2,14 @@
 class Test {
 
     internal fun run() {
+        val bfsAccelerate = BFS(width = 100, height = 100)
+        bfsAccelerate.generateWalls()
+        for (index in 0 until 10000) {
+            val result = bfsAccelerate.path(Point(1, 1), Point(98, 98))
+        }
+
+        Thread.sleep(5000L)
+
         val startTime = System.nanoTime()
         val bfs = BFS(width = 100, height = 100)
         bfs.generateWalls()
