@@ -1,5 +1,3 @@
-import kotlin.random.Random
-
 data class Point(val x: Int, val y: Int) {
     override fun equals(other: Any?): Boolean {
         return other?.let { obj ->
@@ -43,58 +41,66 @@ class BFS(val width: Int, val height: Int) {
     }
 
     fun path(from: Point, to: Point): List<Point>? {
+        val toX = to.x
+        val toY = to.y
         val offsets = arrayOf(Point(1, 0), Point(-1, 0), Point(0, 1), Point(0, -1))
+
+        val offsetsX = arrayOf(1, -1, 0, 0);
+        val offsetsY = arrayOf(0, 0, 1, -1);
 
         for (index in 0 until width * height) {
             visited[index] = false
         }
         visited[from.x + from.y * width] = true
 
-        val points = mutableListOf(Pair(from, 0))
+        val pointsX = mutableListOf(from.x)
+        val pointsY = mutableListOf(from.y)
+        val pointsL = mutableListOf(0)
         var index = 0
 
-        while (index < points.count()) {
-            val pair = points[index]
-            val pos = pair.first
-            val length = pair.second
+        while (index < pointsX.count()) {
+            val posX = pointsX[index]
+            val posY = pointsY[index]
+            val length = pointsL[index]
 
-            if (to == pos) {
+            if (toX == posX && toY == posY) {
                 break
             }
 
             index += 1
 
-            for (offset in offsets) {
-                val nX = pos.x + offset.x
-                val nY = pos.y + offset.y
+            for (oindex in 0..3) {
+                val nX = posX + offsetsX[oindex]
+                val nY = posY + offsetsY[oindex]
                 if (visited[nX + nY * width] || walls[nX + nY * width]) {
                     continue
                 }
                 visited[nX + nY * width] = true
 
-                points.add(Pair(Point(nX, nY), length + 1))
+                pointsX.add(nX)
+                pointsY.add(nY)
+                pointsL.add(length + 1)
             }
         }
 
-        if (index >= points.count()) {
+        if (index >= pointsX.count()) {
             return null
         }
 
         val result = mutableListOf<Point>()
 
-        result.add(points[index].first)
-        var currentLength = points[index].second
+        result.add(Point(pointsX[index], pointsY[index]))
+        var currentLength = pointsL[index]
 
         while (index > 0) {
-            val pair = points[index]
             index -= 1
 
-            if (pair.second != currentLength - 1) {
+            if (pointsL[index] != currentLength - 1) {
                 continue
             }
 
-            result.add(pair.first)
-            currentLength = pair.second
+            result.add(Point(pointsX[index], pointsY[index]))
+            currentLength = pointsL[index]
         }
 
         return result.reversed()
