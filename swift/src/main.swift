@@ -13,7 +13,7 @@ func runBfs() {
     bfs.generateWalls()
 
     for _ in 0..<100000 {
-        let result = bfs.path(from: Point(x: 1, y: 1), to: Point(x: 99, y: 99))
+        let result = bfs.path(from: Point(x: 1, y: 1), to: Point(x: 98, y: 98))
         _ = result
     }
     let endTime = DispatchTime.now()

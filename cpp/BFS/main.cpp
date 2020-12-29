@@ -15,7 +15,7 @@ void test() {
     bfs.generateWalls();
 
     for(int index = 0; index < 100000; ++index) {
-        auto result = bfs.path({1,1}, {99,99});
+        auto result = bfs.path({1,1}, {98,98});
     }
     auto end = std::chrono::high_resolution_clock::now();
 

@@ -18,26 +18,31 @@ struct PointInfo {
 }
 
 final class BFS {
-    let width: Int
-    let height: Int
+    private let width: Int
+    private let height: Int
 
-    private var walls: [Bool] = []
+    private let walls: UnsafeMutableBufferPointer<Bool>
+    private let visited: UnsafeMutableBufferPointer<Bool>
+    private let pointsStack: UnsafeMutableBufferPointer<PointInfo>
 
     init(width: Int, height: Int) {
         self.width = width
         self.height = height
+        self.walls = .allocate(capacity: width * height)
+        self.visited = .allocate(capacity: width * height)
+        self.pointsStack = .allocate(capacity: width * height)
     }
 
     func generateWalls() {
-        var newWalls = [Bool](repeating: false, count: width * height)
-
+        walls.assign(repeating: false)
+        
         for index in 0..<width {
-            newWalls[index] = true
-            newWalls[index + (height - 1) * width] = true
+            walls[index] = true
+            walls[index + (height - 1) * width] = true
         }
         for index in 0..<height {
-            newWalls[index * width] = true
-            newWalls[width - 1 + index * width] = true
+            walls[index * width] = true
+            walls[width - 1 + index * width] = true
         }
 
         let h = height / 10
@@ -45,32 +50,27 @@ final class BFS {
         for index in 0..<(height - h) {
             let x = 2 * w
             let y = index
-            newWalls[x + y * width] = true
+            walls[x + y * width] = true
         }
         for index in h..<height {
             let x = 8 * w
             let y = index
-            newWalls[x + y * width] = true
+            walls[x + y * width] = true
         }
-
-        walls = newWalls
     }
 
     func path(from: Point, to: Point) -> [Point]? {
         let offsets = [Point(x: 1, y: 0), Point(x: -1, y: 0), Point(x: 0, y: 1), Point(x: 0, y: -1)]
 
-        var visited = [Bool](repeating: false, count: width * height)
+        visited.assign(repeating: false)
         visited[from.x + from.y * width] = true
 
-        var points = ContiguousArray<PointInfo>()
-        points.reserveCapacity(width * height)
-
-        points.append(PointInfo(pos: from, length: 0))
-
+        pointsStack[0] = PointInfo(pos: from, length: 0)
+        var pointsCount = 1
         var index = 0
 
-        while index < points.count {
-            let info = points[index]
+        while index < pointsCount {
+            let info = pointsStack[index]
             if to == info.pos {
                 break
             }
@@ -84,22 +84,23 @@ final class BFS {
                 }
                 visited[p.x + p.y * width] = true
 
-                points.append(PointInfo(pos: p, length: info.length + 1))
+                pointsStack[pointsCount] = PointInfo(pos: p, length: info.length + 1)
+                pointsCount += 1
             }
         }
 
-        if index >= points.count {
+        if index >= pointsCount {
             return nil
         }
 
         var result = ContiguousArray<Point>()
-        result.reserveCapacity(points[index].length)
+        result.reserveCapacity(pointsStack[index].length)
 
-        result.append(points[index].pos)
-        var currentLength = points[index].length
+        result.append(pointsStack[index].pos)
+        var currentLength = pointsStack[index].length
 
         while index > 0 {
-            let info = points[index]
+            let info = pointsStack[index]
             index -= 1
 
             if info.length != currentLength - 1 {
