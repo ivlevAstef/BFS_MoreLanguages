@@ -1,8 +1,8 @@
 # BFS_MoreLanguages
 test project for compare bfs speed on difference languages 
 
-Any tests: 100000 runs. Area 100x100. walls generate.
-On one run: path founds from (1,1) to (99,99)
+Any tests: 100000 runs. Area 100x100. Walls generate used same algorith.
+On one run: path founds from (1,1) to (98,98)
 
 ## Mac Mini 2018 3,2 GHz 6-Core Intel Core i7
 
