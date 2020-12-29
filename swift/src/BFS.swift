@@ -30,9 +30,26 @@ final class BFS {
 
     func generateWalls() {
         var newWalls = [Bool](repeating: false, count: width * height)
-        for _ in 0..<(width * height / 10) {
-            let x = Int.random(in: 0..<width)
-            let y = Int.random(in: 0..<height)
+
+        for index in 0..<width {
+            newWalls[index] = true
+            newWalls[index + (height - 1) * width] = true
+        }
+        for index in 0..<height {
+            newWalls[index * width] = true
+            newWalls[width - 1 + index * width] = true
+        }
+
+        let h = height / 10
+        let w = width / 10
+        for index in 0..<(height - h) {
+            let x = 2 * w
+            let y = index
+            newWalls[x + y * width] = true
+        }
+        for index in h..<height {
+            let x = 8 * w
+            let y = index
             newWalls[x + y * width] = true
         }
 
@@ -46,6 +63,7 @@ final class BFS {
         visited[from.x + from.y * width] = true
 
         var points: [PointInfo] = [PointInfo(pos: from, length: 0)]
+        points.reserveCapacity(width * height)
         var index = 0
 
         while index < points.count {
@@ -58,14 +76,10 @@ final class BFS {
 
             for offset in offsets {
                 let p = Point(x: info.pos.x + offset.x, y: info.pos.y + offset.y)
-                if p.x < 0 || p.x >= width || p.y < 0 || p.y >= height || visited[p.x + p.y * width] {
+                if visited[p.x + p.y * width] || walls[p.x + p.y * width] {
                     continue
                 }
                 visited[p.x + p.y * width] = true
-
-                if walls[p.x + p.y * width] {
-                    continue
-                }
 
                 points.append(PointInfo(pos: p, length: info.length + 1))
             }
@@ -76,6 +90,8 @@ final class BFS {
         }
 
         var result: [Point] = []
+        result.reserveCapacity(points[index].length)
+
         result.append(points[index].pos)
         var currentLength = points[index].length
 

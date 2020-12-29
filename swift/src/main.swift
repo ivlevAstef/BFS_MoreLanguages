@@ -10,12 +10,11 @@ import Foundation
 func runBfs() {
     let startTime = DispatchTime.now()
     let bfs = BFS(width: 100, height: 100)
-    for _ in 0..<1000 {
-        bfs.generateWalls()
-        for _ in 0..<100 {
-            let result = bfs.path(from: Point(x: 0, y: 0), to: Point(x: 99, y: 99))
-            _ = result
-        }
+    bfs.generateWalls()
+
+    for _ in 0..<100000 {
+        let result = bfs.path(from: Point(x: 1, y: 1), to: Point(x: 99, y: 99))
+        _ = result
     }
     let endTime = DispatchTime.now()
 

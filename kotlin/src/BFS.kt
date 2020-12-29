@@ -19,10 +19,25 @@ class BFS(val width: Int, val height: Int) {
         for (index in 0 until width * height) {
             walls[index] = false
         }
+        for (index in 0 until width) {
+            walls[index] = true
+            walls[index + (height - 1) * width] = true
+        }
+        for (index in 0 until height) {
+            walls[index * width] = true
+            walls[width - 1 + index * width] = true
+        }
 
-        for (index in 0 until width * height / 10) {
-            val x = Random.nextInt(0, width)
-            val y = Random.nextInt(0, height)
+        val h = height / 10
+        val w = width / 10
+        for (index in 0 until height - h) {
+            val x = 2 * w
+            val y = index
+            walls[x + y * width] = true
+        }
+        for (index in h until height) {
+            val x = 8 * w
+            val y = index
             walls[x + y * width] = true
         }
     }
@@ -52,14 +67,10 @@ class BFS(val width: Int, val height: Int) {
             for (offset in offsets) {
                 val nX = pos.x + offset.x
                 val nY = pos.y + offset.y
-                if (nX < 0 || nX >= width || nY < 0 || nY >= height || visited[nX + nY * width]) {
+                if (visited[nX + nY * width] || walls[nX + nY * width]) {
                     continue
                 }
                 visited[nX + nY * width] = true
-
-                if (walls[nX + nY * width]) {
-                    continue
-                }
 
                 points.add(Pair(Point(nX, nY), length + 1))
             }
