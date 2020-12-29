@@ -12,25 +12,22 @@ struct Point: Equatable {
     let y: Int
 }
 
-struct PointInfo {
-    let pos: Point
-    let length: Int
-}
-
 final class BFS {
     private let width: Int
     private let height: Int
 
     private let walls: UnsafeMutableBufferPointer<Bool>
     private let visited: UnsafeMutableBufferPointer<Bool>
-    private let pointsStack: UnsafeMutableBufferPointer<PointInfo>
+    private let depth: UnsafeMutableBufferPointer<Int16>
+    private let queue: UnsafeMutableBufferPointer<Point>
 
     init(width: Int, height: Int) {
         self.width = width
         self.height = height
         self.walls = .allocate(capacity: width * height)
         self.visited = .allocate(capacity: width * height)
-        self.pointsStack = .allocate(capacity: width * height)
+        self.depth = .allocate(capacity: width * height)
+        self.queue = .allocate(capacity: width * height)
     }
 
     func generateWalls() {
@@ -61,54 +58,63 @@ final class BFS {
 
     func path(from: Point, to: Point) -> [Point]? {
         let offsets = [Point(x: 1, y: 0), Point(x: -1, y: 0), Point(x: 0, y: 1), Point(x: 0, y: -1)]
+        // fill use BFS
+
+        depth.assign(repeating: -1)
+        depth[from.x + from.y * width] = 0
 
         visited.assign(repeating: false)
         visited[from.x + from.y * width] = true
 
-        pointsStack[0] = PointInfo(pos: from, length: 0)
-        var pointsCount = 1
-        var index = 0
+        queue[0] = from
+        var queueIter = 0
+        var queueEnd = 1
 
-        while index < pointsCount {
-            let info = pointsStack[index]
-            if to == info.pos {
+        while queueIter < queueEnd {
+            let pos = queue[queueIter]
+            let length = depth[pos.x + pos.y * width]
+            if to == pos {
                 break
             }
 
-            index += 1
+            queueIter += 1
 
             for offset in offsets {
-                let p = Point(x: info.pos.x + offset.x, y: info.pos.y + offset.y)
+                let p = Point(x: pos.x + offset.x, y: pos.y + offset.y)
                 if visited[p.x + p.y * width] || walls[p.x + p.y * width] {
                     continue
                 }
                 visited[p.x + p.y * width] = true
 
-                pointsStack[pointsCount] = PointInfo(pos: p, length: info.length + 1)
-                pointsCount += 1
+                queue[queueEnd] = p
+                queueEnd += 1
+                depth[p.x + p.y * width] = length + 1
             }
         }
 
-        if index >= pointsCount {
+        if queueIter == queueEnd { // not found
             return nil
         }
 
+        // Make path
+
+        var pos = queue[queueIter]
+
         var result = ContiguousArray<Point>()
-        result.reserveCapacity(pointsStack[index].length)
+        result.reserveCapacity(Int(depth[pos.x + pos.y * width]))
+        result.append(pos)
 
-        result.append(pointsStack[index].pos)
-        var currentLength = pointsStack[index].length
+        while pos != from {
+            let length = depth[pos.x + pos.y * width]
 
-        while index > 0 {
-            let info = pointsStack[index]
-            index -= 1
-
-            if info.length != currentLength - 1 {
-                continue
+            for offset in offsets {
+                let p = Point(x: pos.x + offset.x, y: pos.y + offset.y)
+                if depth[p.x + p.y * width] == length - 1 {
+                    pos = p
+                    result.append(p)
+                    break // push first found point.
+                }
             }
-
-            result.append(info.pos)
-            currentLength = info.length
         }
 
         return result.reversed()

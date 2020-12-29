@@ -9,9 +9,10 @@ On one run: path founds from (1,1) to (98,98)
 
 ### Kotlin (JVM, openjdk-15)
 Avg. Time: 27350 ms
+28, 27600, 26769
 
 ### Swift usage Unsafe API, (Release, -O, SWIFT_DISABLE_SAFETY_CHECKS = YES)
-Avg. Time: 4350 ms
+Avg. Time: 3700 ms
 
 ### CPP (Release, -03)
-Avg. Time: 4575 ms
+Avg. Time: 3825 ms

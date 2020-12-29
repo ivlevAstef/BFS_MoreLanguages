@@ -34,24 +34,26 @@ class BFS(val width: Int, val height: Int) {
 
     fun path(from: Point, to: Point): List<Point>? {
         val offsets = arrayOf(Point(1, 0), Point(-1, 0), Point(0, 1), Point(0, -1))
+        // fill use bfs
 
         for (index in 0 until width * height) {
             visited[index] = false
+            depth[index] = -1
         }
         visited[from.x + from.y * width] = true
         depth[from.x + from.y * width] = 0
 
-        val points = mutableListOf(from)
-        var index = 0
+        val queue = mutableListOf(from)
+        var queueIter = 0
 
-        while (index < points.count()) {
-            val pos = points[index]
+        while (queueIter < queue.count()) {
+            val pos = queue[queueIter]
 
             if (to.x == pos.x && to.y == pos.y) {
                 break
             }
 
-            index += 1
+            queueIter += 1
 
             val length = depth[pos.x + pos.y * width]
             for (offset in offsets) {
@@ -62,31 +64,33 @@ class BFS(val width: Int, val height: Int) {
                 }
                 visited[nX + nY * width] = true
 
-                points.add(Point(nX, nY))
+                queue.add(Point(nX, nY))
                 depth[nX + nY * width] = length + 1
             }
         }
 
-        if (index >= points.count()) {
+        if (queueIter == queue.count()) { // not found
             return null
         }
 
+        // make path
+
         val result = mutableListOf<Point>()
+        result.add(to)
 
-        result.add(points[index])
-        var currentLength = depth[points[index].x + points[index].y * width]
-
-        while (index > 0) {
-            val pos = points[index]
+        var pos = result.last()
+        while (pos.x != from.x || pos.y != from.y) {
             val length = depth[pos.x + pos.y * width]
-            index -= 1
 
-            if (length != currentLength - 1) {
-                continue
+            for (offset in offsets) {
+                val nX = pos.x + offset.x
+                val nY = pos.y + offset.y
+                if (depth[nX + nY * width] == length - 1) {
+                    pos = Point(nX, nY)
+                    result.add(pos)
+                    break // push first found point.
+                }
             }
-
-            result.add(points[index])
-            currentLength = length
         }
 
         return result.reversed()

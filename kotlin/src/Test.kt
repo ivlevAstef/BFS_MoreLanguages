@@ -1,12 +1,15 @@
 
 class Test {
-
-    internal fun run() {
+    private fun accelerate() {
         val bfsAccelerate = BFS(width = 100, height = 100)
         bfsAccelerate.generateWalls()
         for (index in 0 until 10000) {
             val result = bfsAccelerate.path(Point(1, 1), Point(98, 98))
         }
+    }
+
+    internal fun run() {
+        accelerate()
 
         Thread.sleep(5000L)
 

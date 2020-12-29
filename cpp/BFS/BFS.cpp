@@ -14,8 +14,9 @@ static const Point offsets[4] = { {1, 0}, {-1, 0}, {0, 1}, {0, -1} };
 BFS::BFS(int width, int height): width(width), height(height) {
     walls = (bool*)calloc(width * height, sizeof(bool));
     visited = (bool*)calloc(width * height, sizeof(bool));
+    depth = (int16_t*)calloc(width * height, sizeof(int16_t));
 
-    pointsStack = (PointInfo*)calloc(width * height, sizeof(PointInfo));
+    queue = (Point*)calloc(width * height, sizeof(Point));
 }
 
 void BFS::generateWalls() {
@@ -44,54 +45,64 @@ void BFS::generateWalls() {
     }
 }
 std::vector<Point> BFS::path(Point from, Point to) {
+    // fill use BFS
     memset(visited, false, width * height * sizeof(bool));
+    memset(depth, -1, width * height * sizeof(int16_t));
 
     visited[from.x + from.y * width] = true;
-    pointsStack[0] = { from, 0 };
+    depth[from.x + from.y * width] = 0;
 
-    int index = 0;
-    int pointsCount = 1;
-    while (index < pointsCount) {
-        const PointInfo& info = pointsStack[index];
-        if (info.pos.x == to.x && info.pos.y == to.y) {
+    queue[0] = from;
+    int queueIter = 0;
+    int queueEnd = 1;
+
+    while (queueIter < queueEnd) {
+        const Point& pos = queue[queueIter];
+        const int32_t& length = depth[pos.x + pos.y * width];
+        if (pos.x == to.x && pos.y == to.y) {
             break;
         }
 
-        ++index;
+        ++queueIter;
 
         for (const Point& offset : offsets) {
-            Point p = { info.pos.x + offset.x, info.pos.y + offset.y };
+            const int x = pos.x + offset.x;
+            const int y = pos.y + offset.y;
 
-            if (visited[p.x + p.y * width] || walls[p.x + p.y * width]) {
+            if (visited[x + y * width] || walls[x + y * width]) {
                 continue;
             }
-            visited[p.x + p.y * width] = true;
+            visited[x + y * width] = true;
 
-            pointsStack[pointsCount] = { p, info.length + 1 };
-            ++pointsCount;
+            queue[queueEnd++] = {x,y};
+            depth[x + y * width] = length + 1;
         }
     }
 
-    if (index >= pointsCount) {
+    if (queueIter == queueEnd) { // not found
         return std::vector<Point>();
     }
 
+    // Make Path
+    Point pos = queue[queueIter];
+
     std::vector<Point> result;
-    result.reserve(pointsStack[index].length);
-    result.push_back(pointsStack[index].pos);
+    result.reserve(depth[pos.x + pos.y * width]);
 
-    int currentLength = pointsStack[index].length;
+    result.push_back(pos);
+    while (pos.x != from.x || pos.y != from.y) {
+        const int32_t& length = depth[pos.x + pos.y * width];
 
-    while (index > 0) {
-        const PointInfo& info = pointsStack[index];
-        --index;
-
-        if (info.length != currentLength - 1) {
-            continue;
+        for (const Point& offset : offsets) {
+            const int x = pos.x + offset.x;
+            const int y = pos.y + offset.y;
+            if (depth[x + y * width] == length - 1) {
+                pos.x = x;
+                pos.y = y;
+                result.push_back({x, y});
+                break; // push first found point.
+            }
         }
-
-        result.push_back(info.pos);
-        currentLength = info.length;
     }
 
     std::reverse(std::begin(result), std::end(result));

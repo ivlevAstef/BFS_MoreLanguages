@@ -15,11 +15,6 @@ struct Point {
     int y;
 };
 
-struct PointInfo {
-    Point pos;
-    int length;
-};
-
 class BFS {
 public:
     BFS(int width, int height);
@@ -33,8 +28,9 @@ private:
     
     bool* walls;
     bool* visited;
+    int16_t* depth;
 
-    PointInfo* pointsStack;
+    Point* queue;
 };
 
 
