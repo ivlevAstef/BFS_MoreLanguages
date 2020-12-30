@@ -1,16 +1,12 @@
-use super::Point;
+use super::{point, Point};
 
 pub struct Array2D<T> {
     inner: Vec<T>,
-    width: usize,
-    // Height is not actually used
-    #[allow(dead_code)]
-    height: usize,
 }
 
 impl<T> Array2D<T> {
     fn index(&self, pos: Point) -> usize {
-        pos.x() as usize + self.width * pos.y() as usize
+        pos.index()
     }
 }
 
@@ -22,10 +18,9 @@ impl<T: Default + Clone> Array2D<T> {
 
 impl<T: Clone> Array2D<T> {
     pub fn filled_with(value: T, width: usize, height: usize) -> Self {
+        assert!(width <= point::MAX_WIDTH);
         Self {
-            inner: vec![value; width * height],
-            width,
-            height,
+            inner: vec![value; point::MAX_WIDTH * height],
         }
     }
     pub fn fill(&mut self, value: T) {

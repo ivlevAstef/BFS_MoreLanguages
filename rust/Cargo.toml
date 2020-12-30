@@ -6,12 +6,10 @@ edition = "2018"
 
 [features]
 default = [
-    "i32-coords",
     "neighbors-ignore-bounds",
 ]
 unsafe-indexing = []
 neighbors-ignore-bounds = []
-i32-coords = []
 
 [profile.release]
 lto = "fat"
