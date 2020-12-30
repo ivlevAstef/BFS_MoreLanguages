@@ -1,8 +1,14 @@
-pub const MAX_WIDTH: usize = 100;
+pub const MAX_COORD: usize = 100;
 
-pub type Coord = i32;
+pub type Coord = i8;
 
-pub type IndexType = u16;
+pub type IndexType = i16;
+
+#[test]
+fn test_limits() {
+    assert!(MAX_COORD <= Coord::MAX as usize);
+    assert!(MAX_COORD * MAX_COORD <= IndexType::MAX as usize);
+}
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct Point {
@@ -12,17 +18,20 @@ pub struct Point {
 impl Point {
     pub fn new(x: Coord, y: Coord) -> Self {
         Self {
-            index: x as IndexType + y as IndexType * MAX_WIDTH as IndexType,
+            index: x as IndexType + y as IndexType * MAX_COORD as IndexType,
         }
     }
+    pub fn with_index(index: IndexType) -> Self {
+        Self { index }
+    }
     pub fn x(&self) -> Coord {
-        (self.index % MAX_WIDTH as IndexType) as Coord
+        (self.index % MAX_COORD as IndexType) as Coord
     }
     pub fn y(&self) -> Coord {
-        (self.index / MAX_WIDTH as IndexType) as Coord
+        (self.index / MAX_COORD as IndexType) as Coord
     }
-    pub fn index(&self) -> usize {
-        self.index as usize
+    pub fn index(&self) -> IndexType {
+        self.index
     }
 
     pub fn neighbors(self, width: usize, height: usize) -> impl Iterator<Item = Self> {
@@ -30,7 +39,7 @@ impl Point {
         return OFFSETS.iter().filter_map(move |offset| {
             if cfg!(feature = "neighbors-ignore-bounds") {
                 Some(Self {
-                    index: (self.index as isize + offset.0 + offset.1 * MAX_WIDTH as isize)
+                    index: (self.index as isize + offset.0 + offset.1 * MAX_COORD as isize)
                         as IndexType,
                 })
             } else {

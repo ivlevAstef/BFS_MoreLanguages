@@ -6,7 +6,7 @@ pub struct Array2D<T> {
 
 impl<T> Array2D<T> {
     fn index(&self, pos: Point) -> usize {
-        pos.index()
+        pos.index() as usize
     }
 }
 
@@ -18,9 +18,9 @@ impl<T: Default + Clone> Array2D<T> {
 
 impl<T: Clone> Array2D<T> {
     pub fn filled_with(value: T, width: usize, height: usize) -> Self {
-        assert!(width <= point::MAX_WIDTH);
+        assert!(width <= point::MAX_COORD);
         Self {
-            inner: vec![value; point::MAX_WIDTH * height],
+            inner: vec![value; point::MAX_COORD * height],
         }
     }
     pub fn fill(&mut self, value: T) {

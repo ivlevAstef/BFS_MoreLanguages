@@ -1,4 +1,5 @@
 use super::array2d::Array2D;
+use super::queue::Queue;
 use super::{point, Point};
 use std::cell::RefCell;
 
@@ -49,27 +50,33 @@ impl BFS {
     }
 
     pub fn path(&self, start: Point, finish: Point) -> Option<Vec<Point>> {
-        let mut from = Array2D::filled_with(None, self.width, self.height);
-        let mut queue = std::collections::VecDeque::new();
+        if start == finish {
+            return Some(vec![start]);
+        }
+        let mut from = Array2D::filled_with(Point::with_index(0), self.width, self.height);
+        fn is_visited(point: Point) -> bool {
+            point.index() != 0
+        }
+        let mut queue = Queue::new();
 
-        from[start] = Some(start);
-        queue.push_back(start);
-        while let Some(pos) = queue.pop_front() {
+        from[start] = start;
+        queue.push(start);
+        while let Some(pos) = queue.pop() {
             if pos == finish {
                 break;
             }
 
             for new_pos in pos.neighbors(self.width, self.height) {
-                if self.walls[new_pos] || from[new_pos].is_some() {
+                if self.walls[new_pos] || is_visited(from[new_pos]) {
                     continue;
                 }
-                from[new_pos] = Some(pos);
-                queue.push_back(new_pos);
+                from[new_pos] = pos;
+                queue.push(new_pos);
             }
         }
 
         // not found
-        if from[finish].is_none() {
+        if is_visited(from[finish]) {
             return None;
         }
 
@@ -77,7 +84,7 @@ impl BFS {
         let mut result = Vec::new();
         result.push(pos);
         while pos != start {
-            let prev_pos = from[pos].unwrap();
+            let prev_pos = from[pos];
             pos = prev_pos;
             result.push(pos);
         }

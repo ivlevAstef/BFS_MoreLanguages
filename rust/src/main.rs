@@ -4,8 +4,9 @@
 mod array2d;
 mod bfs;
 mod point;
+mod queue;
 
-use point::*;
+use point::Point;
 
 fn main() {
     let start = std::time::Instant::now();
