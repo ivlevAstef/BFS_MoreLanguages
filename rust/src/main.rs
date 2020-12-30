@@ -1,3 +1,4 @@
+mod array2d;
 mod bfs;
 
 fn main() {

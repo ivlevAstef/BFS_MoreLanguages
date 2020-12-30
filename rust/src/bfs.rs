@@ -1,4 +1,4 @@
-use ::array2d::Array2D;
+use super::array2d::Array2D;
 
 type Point = (usize, usize);
 
