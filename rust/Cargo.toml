@@ -10,6 +10,7 @@ unsafe-indexing = []
 neighbors-ignore-bounds = []
 hacky-collections = []
 point-index = []
+hacky-visited = []
 
 [profile.release]
 lto = "fat"

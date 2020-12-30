@@ -52,24 +52,52 @@ impl BFS {
         if start == finish {
             return Some(vec![start]);
         }
-        // Without hacky optimizations, `from` should probably be of type `Array2D<Option<Point>>`,
-        // where None is used to signify unvisited cells
-        let mut from = Array2D::filled_with(
-            Point::with_index(0), // Point with zero index is (0, 0), it contains wall so is never put in the queue
-            self.width,
-            self.height,
-        );
-        let mut queue = Queue::new();
 
-        // This is a macro just because it is easier to change this in one place
-        macro_rules! visited {
-            ($pos:expr) => {
-                from[$pos].index() != 0
-                // With Options this would be `from[$pos].is_some()`
-            };
+        #[derive(Debug, Copy, Clone)]
+        struct CellState {
+            #[cfg(feature = "hacky-visited")]
+            from: Point, // Point (0, 0) contains wall so is never put in the queue, so is used instead of None
+            #[cfg(not(feature = "hacky-visited"))]
+            from: Option<Point>,
         }
 
-        from[start] = start;
+        impl CellState {
+            pub fn default() -> Self {
+                Self {
+                    #[cfg(feature = "hacky-visited")]
+                    from: Point::with_index(0),
+                    #[cfg(not(feature = "hacky-visited"))]
+                    from: None,
+                }
+            }
+            pub fn new_from(from: Point) -> Self {
+                Self {
+                    #[cfg(feature = "hacky-visited")]
+                    from,
+                    #[cfg(not(feature = "hacky-visited"))]
+                    from: Some(from),
+                }
+            }
+            pub fn is_visited(&self) -> bool {
+                #[cfg(feature = "hacky-visited")]
+                return self.from.index() != 0;
+                #[cfg(not(feature = "hacky-visited"))]
+                return self.from.is_some();
+            }
+            pub fn from(&self) -> Point {
+                #[cfg(feature = "hacky-visited")]
+                return self.from;
+                #[cfg(not(feature = "hacky-visited"))]
+                return self.from.unwrap();
+            }
+        }
+
+        let mut cell_states: Array2D<CellState> =
+            Array2D::filled_with(CellState::default(), self.width, self.height);
+
+        let mut queue = Queue::new();
+
+        cell_states[start] = CellState::new_from(start);
         queue.push(start);
         while let Some(pos) = queue.pop() {
             if pos == finish {
@@ -77,18 +105,18 @@ impl BFS {
             }
 
             for new_pos in pos.neighbors(self.width, self.height) {
-                if visited![new_pos] {
+                if cell_states[new_pos].is_visited() {
                     continue;
                 }
                 if self.walls[new_pos] {
                     continue;
                 }
-                from[new_pos] = pos;
+                cell_states[new_pos] = CellState::new_from(pos);
                 queue.push(new_pos);
             }
         }
 
-        if !visited![finish] {
+        if !cell_states[finish].is_visited() {
             return None;
         }
 
@@ -96,8 +124,7 @@ impl BFS {
         let mut result = Vec::new();
         result.push(pos);
         while pos != start {
-            let prev_pos = from[pos];
-            pos = prev_pos;
+            pos = cell_states[pos].from();
             result.push(pos);
         }
 
