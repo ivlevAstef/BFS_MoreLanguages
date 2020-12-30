@@ -91,7 +91,7 @@ impl BFS {
         walls
     }
 
-    pub fn path(&self, from: Point, to: Point) -> Vec<Point> {
+    pub fn path(&self, from: Point, to: Point) -> Option<Vec<Point>> {
         #[cfg(feature = "alloc-state-once")]
         let mut state = {
             let mut state = self.state.borrow_mut();
@@ -124,7 +124,7 @@ impl BFS {
 
         // not found
         if !state.visited[to] {
-            return Vec::new();
+            return None;
         }
 
         let mut pos = to;
@@ -142,6 +142,6 @@ impl BFS {
         }
 
         result.reverse();
-        result
+        Some(result)
     }
 }
