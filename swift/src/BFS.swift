@@ -17,15 +17,13 @@ final class BFS {
     private let height: Int
 
     private let walls: UnsafeMutableBufferPointer<Bool>
-    private let visited: UnsafeMutableBufferPointer<Bool>
     private let depth: UnsafeMutableBufferPointer<Int16>
-    private let queue: UnsafeMutableBufferPointer<Point>
+    private let queue: UnsafeMutableBufferPointer<Int>
 
     init(width: Int, height: Int) {
         self.width = width
         self.height = height
         self.walls = .allocate(capacity: width * height)
-        self.visited = .allocate(capacity: width * height)
         self.depth = .allocate(capacity: width * height)
         self.queue = .allocate(capacity: width * height)
     }
@@ -57,38 +55,37 @@ final class BFS {
     }
 
     func path(from: Point, to: Point) -> [Point]? {
-        let offsets = [Point(x: 1, y: 0), Point(x: -1, y: 0), Point(x: 0, y: 1), Point(x: 0, y: -1)]
+        // for optimize use index not Point.
+        let fromIndex = from.x + from.y * width
+        let toIndex = to.x + to.y * width
+        let offsets = [1, -1, width, -width]
         // fill use BFS
 
         depth.assign(repeating: -1)
-        depth[from.x + from.y * width] = 0
+        depth[fromIndex] = 0
 
-        visited.assign(repeating: false)
-        visited[from.x + from.y * width] = true
-
-        queue[0] = from
+        queue[0] = fromIndex
         var queueIter = 0
         var queueEnd = 1
 
         while queueIter < queueEnd {
-            let pos = queue[queueIter]
-            let length = depth[pos.x + pos.y * width]
-            if to == pos {
+            let index = queue[queueIter]
+            if toIndex == index {
                 break
             }
 
             queueIter += 1
+            let length = depth[index]
 
             for offset in offsets {
-                let p = Point(x: pos.x + offset.x, y: pos.y + offset.y)
-                if visited[p.x + p.y * width] || walls[p.x + p.y * width] {
+                let nextIndex = index + offset
+                if depth[nextIndex] >= 0 || walls[nextIndex] {
                     continue
                 }
-                visited[p.x + p.y * width] = true
+                depth[nextIndex] = length + 1
 
-                queue[queueEnd] = p
+                queue[queueEnd] = nextIndex
                 queueEnd += 1
-                depth[p.x + p.y * width] = length + 1
             }
         }
 
@@ -98,20 +95,20 @@ final class BFS {
 
         // Make path
 
-        var pos = queue[queueIter]
+        var index = queue[queueIter]
 
         var result = ContiguousArray<Point>()
-        result.reserveCapacity(Int(depth[pos.x + pos.y * width]))
-        result.append(pos)
+        result.reserveCapacity(Int(depth[index]))
+        result.append(Point(x: index % width, y: index / width))
 
-        while pos != from {
-            let length = depth[pos.x + pos.y * width]
+        while index != fromIndex {
+            let length = depth[index]
 
             for offset in offsets {
-                let p = Point(x: pos.x + offset.x, y: pos.y + offset.y)
-                if depth[p.x + p.y * width] == length - 1 {
-                    pos = p
-                    result.append(p)
+                let nextIndex = index + offset
+                if depth[nextIndex] == length - 1 {
+                    index = nextIndex
+                    result.append(Point(x: index % width, y: index / width))
                     break // push first found point.
                 }
             }

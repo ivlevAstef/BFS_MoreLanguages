@@ -9,14 +9,11 @@
 #include <algorithm>
 #include "BFS.hpp"
 
-static const Point offsets[4] = { {1, 0}, {-1, 0}, {0, 1}, {0, -1} };
-
 BFS::BFS(int width, int height): width(width), height(height) {
     walls = (bool*)calloc(width * height, sizeof(bool));
-    visited = (bool*)calloc(width * height, sizeof(bool));
     depth = (int16_t*)calloc(width * height, sizeof(int16_t));
 
-    queue = (Point*)calloc(width * height, sizeof(Point));
+    queue = (int16_t*)calloc(width * height, sizeof(int16_t));
 }
 
 void BFS::generateWalls() {
@@ -45,37 +42,37 @@ void BFS::generateWalls() {
     }
 }
 std::vector<Point> BFS::path(Point from, Point to) {
+    // for optimize use index not Point.
+    const int16_t fromIndex = from.x + from.y * width;
+    const int16_t toIndex = to.x + to.y * width;
+    const int16_t offsets[4] = { 1, -1, static_cast<int16_t>(width), static_cast<int16_t>(-width) };
     // fill use BFS
-    memset(visited, false, width * height * sizeof(bool));
     memset(depth, -1, width * height * sizeof(int16_t));
 
-    visited[from.x + from.y * width] = true;
-    depth[from.x + from.y * width] = 0;
+    queue[0] = fromIndex;
+    depth[fromIndex] = 0;
 
-    queue[0] = from;
     int queueIter = 0;
     int queueEnd = 1;
 
     while (queueIter < queueEnd) {
-        const Point& pos = queue[queueIter];
-        const int32_t& length = depth[pos.x + pos.y * width];
-        if (pos.x == to.x && pos.y == to.y) {
+        const int16_t index = queue[queueIter];
+        if (index == toIndex) {
             break;
         }
 
+        const int32_t& length = depth[index];
         ++queueIter;
 
-        for (const Point& offset : offsets) {
-            const int x = pos.x + offset.x;
-            const int y = pos.y + offset.y;
+        for (const int16_t& offset : offsets) {
+            const int16_t nextIndex = index + offset;
 
-            if (visited[x + y * width] || walls[x + y * width]) {
+            if (depth[nextIndex] >= 0 || walls[nextIndex]) {
                 continue;
             }
-            visited[x + y * width] = true;
+            depth[nextIndex] = length + 1;
 
-            queue[queueEnd++] = {x,y};
-            depth[x + y * width] = length + 1;
+            queue[queueEnd++] = nextIndex;
         }
     }
 
@@ -84,22 +81,20 @@ std::vector<Point> BFS::path(Point from, Point to) {
     }
 
     // Make Path
-    Point pos = queue[queueIter];
+    int16_t index = queue[queueIter];
 
     std::vector<Point> result;
-    result.reserve(depth[pos.x + pos.y * width]);
+    result.reserve(depth[index]);
 
-    result.push_back(pos);
-    while (pos.x != from.x || pos.y != from.y) {
-        const int32_t& length = depth[pos.x + pos.y * width];
+    result.push_back({index % width, index / width});
+    while (index != fromIndex) {
+        const int32_t& length = depth[index];
 
-        for (const Point& offset : offsets) {
-            const int x = pos.x + offset.x;
-            const int y = pos.y + offset.y;
-            if (depth[x + y * width] == length - 1) {
-                pos.x = x;
-                pos.y = y;
-                result.push_back({x, y});
+        for (const int16_t& offset : offsets) {
+            const int16_t nextIndex = index + offset;
+            if (depth[nextIndex] == length - 1) {
+                index = nextIndex;
+                result.push_back({index % width, index / width});
                 break; // push first found point.
             }
         }
