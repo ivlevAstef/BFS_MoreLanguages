@@ -12,7 +12,7 @@ fn test_limits() {
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct Point {
-    index: IndexType,
+    index: IndexType, // This is stupid
 }
 
 impl Point {

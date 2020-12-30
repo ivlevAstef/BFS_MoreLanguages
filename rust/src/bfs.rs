@@ -1,7 +1,6 @@
 use super::array2d::Array2D;
 use super::queue::Queue;
 use super::{point, Point};
-use std::cell::RefCell;
 
 pub struct BFS {
     width: usize,
@@ -53,12 +52,20 @@ impl BFS {
         if start == finish {
             return Some(vec![start]);
         }
-        let mut from = Array2D::filled_with(Point::with_index(0), self.width, self.height);
+        // Without hacky optimizations, `from` should probably be of type `Array2D<Option<Point>>`,
+        // where None is used to signify unvisited cells
+        let mut from = Array2D::filled_with(
+            Point::with_index(0), // Point with zero index is (0, 0), it contains wall so is never put in the queue
+            self.width,
+            self.height,
+        );
         let mut queue = Queue::new();
 
+        // This is a macro just because it is easier to change this in one place
         macro_rules! visited {
             ($pos:expr) => {
                 from[$pos].index() != 0
+                // With Options this would be `from[$pos].is_some()`
             };
         }
 

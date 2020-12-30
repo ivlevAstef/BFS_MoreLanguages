@@ -1,5 +1,6 @@
 pub const MAX_LENGTH: usize = super::point::MAX_COORD * super::point::MAX_COORD;
 
+// Using VecDeque directly doesn't seem to hurt performance much
 pub struct Queue<T: Copy> {
     start: usize,
     end: usize,

@@ -1,7 +1,9 @@
 use super::{point, Point};
 
+const LENGTH: usize = point::MAX_COORD * point::MAX_COORD;
+
 pub struct Array2D<T> {
-    inner: [T; point::MAX_COORD * point::MAX_COORD],
+    inner: [T; LENGTH], // Using Vec directly doesn't seem to hurt performance much
 }
 
 impl<T> Array2D<T> {
@@ -18,20 +20,10 @@ impl<T: Default + Copy> Array2D<T> {
 
 impl<T: Copy> Array2D<T> {
     pub fn filled_with(value: T, width: usize, height: usize) -> Self {
-        let mut result = unsafe { Self::uninitialized(width, height) };
-        result.fill(value);
-        result
-    }
-    pub unsafe fn uninitialized(width: usize, height: usize) -> Self {
         assert!(width <= point::MAX_COORD);
         assert!(height <= point::MAX_COORD);
         Self {
-            inner: std::mem::MaybeUninit::uninit().assume_init(),
-        }
-    }
-    pub fn fill(&mut self, value: T) {
-        for x in &mut self.inner {
-            *x = value;
+            inner: [value; LENGTH],
         }
     }
 }
