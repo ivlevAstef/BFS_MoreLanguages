@@ -10,7 +10,7 @@ pub struct Array2D<T> {
 
 impl<T> Array2D<T> {
     fn index(&self, pos: Point) -> usize {
-        pos.0 as usize + self.width * pos.1 as usize
+        pos.x() as usize + self.width * pos.y() as usize
     }
 }
 
