@@ -27,10 +27,9 @@ private:
     int height;
     
     bool* walls;
-    bool* visited;
     int16_t* depth;
 
-    Point* queue;
+    int16_t* queue;
 };
 
 

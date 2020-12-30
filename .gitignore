@@ -90,3 +90,5 @@ fastlane/test_output
 iOSInjectionProject/
 IDEWorkspaceChecks.plist
 kotlin/out
+csharp/.idea/.idea.bfs/.idea
+csharp/bfs/obj
