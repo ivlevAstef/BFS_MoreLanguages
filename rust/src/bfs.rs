@@ -1,17 +1,16 @@
 use super::array2d::Array2D;
-
-type Point = (usize, usize);
+use super::{Point, PointCoord};
+use std::cell::RefCell;
 
 const OFFSETS: &[(isize, isize)] = &[(1, 0), (-1, 0), (0, 1), (0, -1)];
 
 fn neighbors(pos: Point) -> impl Iterator<Item = Point> {
     OFFSETS.iter().map(move |offset| {
         // TODO: out of bounds
-        let new_pos = (
-            (pos.0 as isize + offset.0) as usize,
-            (pos.1 as isize + offset.1) as usize,
-        );
-        new_pos
+        Point(
+            (pos.0 as i32 + offset.0 as i32) as PointCoord,
+            (pos.1 as i32 + offset.1 as i32) as PointCoord,
+        )
     })
 }
 
@@ -19,6 +18,8 @@ pub struct BFS {
     width: usize,
     height: usize,
     walls: Array2D<bool>,
+    visited: RefCell<Array2D<bool>>,
+    depth: RefCell<Array2D<i16>>,
 }
 
 impl BFS {
@@ -27,20 +28,22 @@ impl BFS {
             width,
             height,
             walls: Self::generate_walls(width, height),
+            visited: RefCell::new(Array2D::new_default(width, height)),
+            depth: RefCell::new(Array2D::new_default(width, height)),
         }
     }
 
     fn generate_walls(width: usize, height: usize) -> Array2D<bool> {
         let mut walls = Array2D::filled_with(false, width, height);
 
-        for index in 0..width {
-            walls[(index, 0)] = true;
-            walls[(index, height - 1)] = true;
+        for index in 0..width as PointCoord {
+            walls[Point(index, 0)] = true;
+            walls[Point(index, height as PointCoord - 1)] = true;
         }
 
-        for index in 0..height {
-            walls[(0, index)] = true;
-            walls[(width - 1, index)] = true;
+        for index in 0..height as PointCoord {
+            walls[Point(0, index)] = true;
+            walls[Point(width as PointCoord - 1, index)] = true;
         }
 
         let h = height / 10;
@@ -49,21 +52,23 @@ impl BFS {
         for index in 0..height - h {
             let x = 2 * w;
             let y = index;
-            walls[(x, y)] = true;
+            walls[Point(x as PointCoord, y as PointCoord)] = true;
         }
 
         for index in h..height {
             let x = 8 * w;
             let y = index;
-            walls[(x, y)] = true;
+            walls[Point(x as PointCoord, y as PointCoord)] = true;
         }
 
         walls
     }
 
     pub fn path(&self, from: Point, to: Point) -> Vec<Point> {
-        let mut visited = Array2D::filled_with(false, self.width, self.height);
-        let mut depth: Array2D<i16> = Array2D::filled_with(-1, self.width, self.height);
+        let mut visited = self.visited.borrow_mut();
+        visited.fill(false);
+        let mut depth = self.depth.borrow_mut();
+        depth.fill(-1);
 
         visited[from] = true;
         depth[from] = 0;
