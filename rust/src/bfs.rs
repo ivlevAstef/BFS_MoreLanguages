@@ -76,7 +76,7 @@ impl BFS {
         }
 
         // not found
-        if is_visited(from[finish]) {
+        if !is_visited(from[finish]) {
             return None;
         }
 
