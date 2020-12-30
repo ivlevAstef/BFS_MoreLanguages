@@ -17,4 +17,3 @@ codegen-units = 1
 panic = "abort" # Looks like this feature boosts performance most
 
 [dependencies]
-array2d = "0.2"
