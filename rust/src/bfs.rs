@@ -40,7 +40,6 @@ pub struct BFS {
     width: usize,
     height: usize,
     walls: Array2D<bool>,
-    #[cfg(feature = "alloc-state-once")]
     state: RefCell<State>,
 }
 
@@ -50,7 +49,6 @@ impl BFS {
             width,
             height,
             walls: Self::generate_walls(width, height),
-            #[cfg(feature = "alloc-state-once")]
             state: RefCell::new(State::new(width, height)),
         }
     }
@@ -87,14 +85,8 @@ impl BFS {
     }
 
     pub fn path(&self, from: Point, to: Point) -> Option<Vec<Point>> {
-        #[cfg(feature = "alloc-state-once")]
-        let mut state = {
-            let mut state = self.state.borrow_mut();
-            state.clear();
-            state
-        };
-        #[cfg(not(feature = "alloc-state-once"))]
-        let mut state = State::new(self.width, self.height);
+        let mut state = self.state.borrow_mut();
+        state.clear();
 
         state.visited[from] = true;
         state.depth[from] = 0;

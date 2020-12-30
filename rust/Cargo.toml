@@ -10,7 +10,6 @@ default = [
     "neighbors-ignore-bounds",
 ]
 unsafe-indexing = []
-alloc-state-once = []
 neighbors-ignore-bounds = []
 i32-coords = []
 
