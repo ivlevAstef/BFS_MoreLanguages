@@ -5,10 +5,13 @@ authors = ["kuviman <kuviman@gmail.com>"]
 edition = "2018"
 
 [features]
-default = []
+default = [
+    "i32-coords",
+    "neighbors-ignore-bounds",
+]
 unsafe-indexing = []
 alloc-state-once = []
-ignore-negative-coords = []
+neighbors-ignore-bounds = []
 i32-coords = []
 
 [profile.release]

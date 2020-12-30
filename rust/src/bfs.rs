@@ -2,24 +2,19 @@ use super::array2d::Array2D;
 use super::{Point, PointCoord};
 use std::cell::RefCell;
 
-const OFFSETS: &[(isize, isize)] = &[(1, 0), (-1, 0), (0, 1), (0, -1)];
-
-fn neighbors(pos: Point) -> impl Iterator<Item = Point> {
-    #[cfg(not(feature = "ignore-negative-coords"))]
+fn neighbors(pos: Point, width: usize, height: usize) -> impl Iterator<Item = Point> {
+    const OFFSETS: &[(isize, isize)] = &[(1, 0), (-1, 0), (0, 1), (0, -1)];
     return OFFSETS.iter().filter_map(move |offset| {
-        let x = pos.0 as i32 + offset.0 as i32;
-        let y = pos.1 as i32 + offset.1 as i32;
-        if x < 0 || y < 0 {
-            return None;
+        let p = (
+            pos.0 as i32 + offset.0 as i32,
+            pos.1 as i32 + offset.1 as i32,
+        );
+        if !cfg!(feature = "neighbors-ignore-bounds") {
+            if p.0 < 0 || p.1 < 0 || p.0 >= width as i32 || p.1 >= height as i32 {
+                return None;
+            }
         }
-        Some(Point(x as PointCoord, y as PointCoord))
-    });
-    #[cfg(feature = "ignore-negative-coords")]
-    return OFFSETS.iter().map(move |offset| {
-        Point(
-            (pos.0 as i32 + offset.0 as i32) as PointCoord,
-            (pos.1 as i32 + offset.1 as i32) as PointCoord,
-        )
+        Some(Point(p.0 as PointCoord, p.1 as PointCoord))
     });
 }
 
@@ -112,7 +107,7 @@ impl BFS {
                 break;
             }
 
-            for new_pos in neighbors(pos) {
+            for new_pos in neighbors(pos, self.width, self.height) {
                 if state.visited[new_pos] || self.walls[new_pos] {
                     continue;
                 }
@@ -132,7 +127,7 @@ impl BFS {
         result.push(pos);
         while pos != from {
             let length = state.depth[pos];
-            for prev_pos in neighbors(pos) {
+            for prev_pos in neighbors(pos, self.width, self.height) {
                 if state.depth[prev_pos] == length - 1 {
                     pos = prev_pos;
                     result.push(pos);
