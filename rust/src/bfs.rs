@@ -62,7 +62,7 @@ impl BFS {
         }
 
         impl CellState {
-            pub fn default() -> Self {
+            pub fn unvisited() -> Self {
                 Self {
                     #[cfg(feature = "hacky-visited")]
                     from: Point::with_index(0),
@@ -93,7 +93,7 @@ impl BFS {
         }
 
         let mut cell_states: Array2D<CellState> =
-            Array2D::filled_with(CellState::default(), self.width, self.height);
+            Array2D::filled_with(CellState::unvisited(), self.width, self.height);
 
         let mut queue = Queue::new();
 
