@@ -1,3 +1,5 @@
+use ::array2d::Array2D;
+
 type Point = (usize, usize);
 
 const OFFSETS: &[(isize, isize)] = &[(1, 0), (-1, 0), (0, 1), (0, -1)];
@@ -16,7 +18,7 @@ fn neighbors(pos: Point) -> impl Iterator<Item = Point> {
 pub struct BFS {
     width: usize,
     height: usize,
-    walls: Vec<Vec<bool>>,
+    walls: Array2D<bool>,
 }
 
 impl BFS {
@@ -28,17 +30,17 @@ impl BFS {
         }
     }
 
-    fn generate_walls(width: usize, height: usize) -> Vec<Vec<bool>> {
-        let mut walls = vec![vec![false; height]; width];
+    fn generate_walls(width: usize, height: usize) -> Array2D<bool> {
+        let mut walls = Array2D::filled_with(false, width, height);
 
         for index in 0..width {
-            walls[index][0] = true;
-            walls[index][height - 1] = true;
+            walls[(index, 0)] = true;
+            walls[(index, height - 1)] = true;
         }
 
         for index in 0..height {
-            walls[0][index] = true;
-            walls[width - 1][index] = true;
+            walls[(0, index)] = true;
+            walls[(width - 1, index)] = true;
         }
 
         let h = height / 10;
@@ -47,55 +49,55 @@ impl BFS {
         for index in 0..height - h {
             let x = 2 * w;
             let y = index;
-            walls[x][y] = true;
+            walls[(x, y)] = true;
         }
 
         for index in h..height {
             let x = 8 * w;
             let y = index;
-            walls[x][y] = true;
+            walls[(x, y)] = true;
         }
 
         walls
     }
 
     pub fn path(&self, from: Point, to: Point) -> Vec<Point> {
-        let mut visited = vec![vec![false; self.height]; self.width];
-        let mut depth: Vec<Vec<i16>> = vec![vec![-1; self.height]; self.width];
+        let mut visited = Array2D::filled_with(false, self.width, self.height);
+        let mut depth: Array2D<i16> = Array2D::filled_with(-1, self.width, self.height);
 
-        visited[from.0][from.1] = true;
-        depth[from.0][from.1] = 0;
+        visited[from] = true;
+        depth[from] = 0;
 
         let mut queue = std::collections::VecDeque::with_capacity(self.width * self.height);
         queue.push_back(from);
         while let Some(pos) = queue.pop_front() {
-            let length = depth[pos.0][pos.1];
+            let length = depth[pos];
             if pos == to {
                 break;
             }
 
             for new_pos in neighbors(pos) {
-                if visited[new_pos.0][new_pos.1] || self.walls[new_pos.0][new_pos.1] {
+                if visited[new_pos] || self.walls[new_pos] {
                     continue;
                 }
-                visited[new_pos.0][new_pos.1] = true;
-                depth[new_pos.0][new_pos.1] = length + 1;
+                visited[new_pos] = true;
+                depth[new_pos] = length + 1;
                 queue.push_back(new_pos);
             }
         }
 
         // not found
-        if !visited[to.0][to.1] {
+        if !visited[to] {
             return Vec::new();
         }
 
         let mut pos = to;
-        let mut result = Vec::with_capacity(depth[pos.0][pos.1] as usize);
+        let mut result = Vec::with_capacity(depth[pos] as usize);
         result.push(pos);
         while pos != from {
-            let length = depth[pos.0][pos.1];
+            let length = depth[pos];
             for prev_pos in neighbors(pos) {
-                if depth[prev_pos.0][prev_pos.1] == length - 1 {
+                if depth[prev_pos] == length - 1 {
                     pos = prev_pos;
                     result.push(pos);
                     break; // push first found point
