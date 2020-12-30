@@ -5,11 +5,11 @@ authors = ["kuviman <kuviman@gmail.com>"]
 edition = "2018"
 
 [features]
-default = [
-    "neighbors-ignore-bounds",
-]
+default = []
 unsafe-indexing = []
 neighbors-ignore-bounds = []
+hacky-collections = []
+point-index = []
 
 [profile.release]
 lto = "fat"

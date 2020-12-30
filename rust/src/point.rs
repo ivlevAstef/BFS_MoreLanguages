@@ -12,26 +12,52 @@ fn test_limits() {
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct Point {
-    index: IndexType, // This is stupid
+    #[cfg(not(feature = "point-index"))]
+    x: Coord,
+    #[cfg(not(feature = "point-index"))]
+    y: Coord,
+    #[cfg(feature = "point-index")]
+    index: IndexType,
 }
 
 impl Point {
     pub fn new(x: Coord, y: Coord) -> Self {
         Self {
+            #[cfg(feature = "point-index")]
             index: x as IndexType + y as IndexType * MAX_COORD as IndexType,
+            #[cfg(not(feature = "point-index"))]
+            x,
+            #[cfg(not(feature = "point-index"))]
+            y,
         }
     }
     pub fn with_index(index: IndexType) -> Self {
-        Self { index }
+        Self {
+            #[cfg(feature = "point-index")]
+            index,
+            #[cfg(not(feature = "point-index"))]
+            x: (index % MAX_COORD as IndexType) as Coord,
+            #[cfg(not(feature = "point-index"))]
+            y: (index / MAX_COORD as IndexType) as Coord,
+        }
     }
     pub fn x(&self) -> Coord {
-        (self.index % MAX_COORD as IndexType) as Coord
+        #[cfg(feature = "point-index")]
+        return (self.index % MAX_COORD as IndexType) as Coord;
+        #[cfg(not(feature = "point-index"))]
+        return self.x;
     }
     pub fn y(&self) -> Coord {
-        (self.index / MAX_COORD as IndexType) as Coord
+        #[cfg(feature = "point-index")]
+        return (self.index / MAX_COORD as IndexType) as Coord;
+        #[cfg(not(feature = "point-index"))]
+        return self.y;
     }
     pub fn index(&self) -> IndexType {
-        self.index
+        #[cfg(feature = "point-index")]
+        return self.index;
+        #[cfg(not(feature = "point-index"))]
+        return self.x as IndexType + self.y as IndexType * MAX_COORD as IndexType;
     }
 
     pub fn neighbors(self, width: usize, height: usize) -> impl Iterator<Item = Self> {
@@ -39,9 +65,16 @@ impl Point {
         const OFFSETS: &[(DiffType, DiffType)] = &[(1, 0), (-1, 0), (0, 1), (0, -1)];
         return OFFSETS.iter().filter_map(move |offset| {
             if cfg!(feature = "neighbors-ignore-bounds") {
-                Some(Self {
-                    index: (self.index as DiffType + offset.0 + offset.1 * MAX_COORD as DiffType)
-                        as IndexType,
+                Some(if cfg!(feature = "point-index") {
+                    Self::with_index(
+                        (self.index() as DiffType + (offset.0 + offset.1 * MAX_COORD as DiffType))
+                            as IndexType,
+                    )
+                } else {
+                    Self::new(
+                        (self.x() as DiffType + offset.0) as Coord,
+                        (self.y() as DiffType + offset.1) as Coord,
+                    )
                 })
             } else {
                 let p = (

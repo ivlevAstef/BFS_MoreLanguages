@@ -3,18 +3,12 @@ use super::{point, Point};
 const LENGTH: usize = point::MAX_COORD * point::MAX_COORD;
 
 pub struct Array2D<T> {
-    inner: [T; LENGTH], // Using Vec directly doesn't seem to hurt performance much
+    inner: [T; LENGTH],
 }
 
 impl<T> Array2D<T> {
     fn index(&self, pos: Point) -> usize {
         pos.index() as usize
-    }
-}
-
-impl<T: Default + Copy> Array2D<T> {
-    pub fn new_default(width: usize, height: usize) -> Self {
-        Self::filled_with(T::default(), width, height)
     }
 }
 
