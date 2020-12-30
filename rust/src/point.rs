@@ -35,11 +35,12 @@ impl Point {
     }
 
     pub fn neighbors(self, width: usize, height: usize) -> impl Iterator<Item = Self> {
-        const OFFSETS: &[(isize, isize)] = &[(1, 0), (-1, 0), (0, 1), (0, -1)];
+        type DiffType = i16;
+        const OFFSETS: &[(DiffType, DiffType)] = &[(1, 0), (-1, 0), (0, 1), (0, -1)];
         return OFFSETS.iter().filter_map(move |offset| {
             if cfg!(feature = "neighbors-ignore-bounds") {
                 Some(Self {
-                    index: (self.index as isize + offset.0 + offset.1 * MAX_COORD as isize)
+                    index: (self.index as DiffType + offset.0 + offset.1 * MAX_COORD as DiffType)
                         as IndexType,
                 })
             } else {
