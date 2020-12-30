@@ -54,10 +54,13 @@ impl BFS {
             return Some(vec![start]);
         }
         let mut from = Array2D::filled_with(Point::with_index(0), self.width, self.height);
-        fn is_visited(point: Point) -> bool {
-            point.index() != 0
-        }
         let mut queue = Queue::new();
+
+        macro_rules! visited {
+            ($pos:expr) => {
+                from[$pos].index() != 0
+            };
+        }
 
         from[start] = start;
         queue.push(start);
@@ -67,7 +70,10 @@ impl BFS {
             }
 
             for new_pos in pos.neighbors(self.width, self.height) {
-                if self.walls[new_pos] || is_visited(from[new_pos]) {
+                if visited![new_pos] {
+                    continue;
+                }
+                if self.walls[new_pos] {
                     continue;
                 }
                 from[new_pos] = pos;
@@ -75,8 +81,7 @@ impl BFS {
             }
         }
 
-        // not found
-        if !is_visited(from[finish]) {
+        if !visited![finish] {
             return None;
         }
 

@@ -1,7 +1,7 @@
 use super::{point, Point};
 
 pub struct Array2D<T> {
-    inner: Vec<T>,
+    inner: [T; point::MAX_COORD * point::MAX_COORD],
 }
 
 impl<T> Array2D<T> {
@@ -10,22 +10,28 @@ impl<T> Array2D<T> {
     }
 }
 
-impl<T: Default + Clone> Array2D<T> {
+impl<T: Default + Copy> Array2D<T> {
     pub fn new_default(width: usize, height: usize) -> Self {
         Self::filled_with(T::default(), width, height)
     }
 }
 
-impl<T: Clone> Array2D<T> {
+impl<T: Copy> Array2D<T> {
     pub fn filled_with(value: T, width: usize, height: usize) -> Self {
+        let mut result = unsafe { Self::uninitialized(width, height) };
+        result.fill(value);
+        result
+    }
+    pub unsafe fn uninitialized(width: usize, height: usize) -> Self {
         assert!(width <= point::MAX_COORD);
+        assert!(height <= point::MAX_COORD);
         Self {
-            inner: vec![value; point::MAX_COORD * height],
+            inner: std::mem::MaybeUninit::uninit().assume_init(),
         }
     }
     pub fn fill(&mut self, value: T) {
         for x in &mut self.inner {
-            x.clone_from(&value);
+            *x = value;
         }
     }
 }
