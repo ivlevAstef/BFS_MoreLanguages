@@ -1,0 +1,3 @@
+[build]
+# Actually makes program run slower??
+# rustflags = ["-C", "target-cpu=native"]

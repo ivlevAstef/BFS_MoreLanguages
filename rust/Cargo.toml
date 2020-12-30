@@ -1,0 +1,19 @@
+[package]
+name = "bfs"
+version = "0.1.0"
+authors = ["kuviman <kuviman@gmail.com>"]
+edition = "2018"
+
+[features]
+default = []
+unsafe-indexing = []
+alloc-state-once = []
+ignore-negative-coords = []
+i32-coords = []
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort" # Looks like this feature boosts performance most
+
+[dependencies]
