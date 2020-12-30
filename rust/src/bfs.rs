@@ -2,6 +2,45 @@ use super::array2d::Array2D;
 use super::queue::Queue;
 use super::{point, Point};
 
+#[derive(Debug, Copy, Clone)]
+struct CellState {
+    #[cfg(feature = "hacky-cell-state")]
+    from: Point, // Point (0, 0) contains wall so is never put in the queue, so is used instead of None
+    #[cfg(not(feature = "hacky-cell-state"))]
+    from: Option<Point>,
+}
+
+impl CellState {
+    pub fn unvisited() -> Self {
+        Self {
+            #[cfg(feature = "hacky-cell-state")]
+            from: Point::with_index(0),
+            #[cfg(not(feature = "hacky-cell-state"))]
+            from: None,
+        }
+    }
+    pub fn new_from(from: Point) -> Self {
+        Self {
+            #[cfg(feature = "hacky-cell-state")]
+            from,
+            #[cfg(not(feature = "hacky-cell-state"))]
+            from: Some(from),
+        }
+    }
+    pub fn is_visited(&self) -> bool {
+        #[cfg(feature = "hacky-cell-state")]
+        return self.from.index() != 0;
+        #[cfg(not(feature = "hacky-cell-state"))]
+        return self.from.is_some();
+    }
+    pub fn from(&self) -> Point {
+        #[cfg(feature = "hacky-cell-state")]
+        return self.from;
+        #[cfg(not(feature = "hacky-cell-state"))]
+        return self.from.unwrap();
+    }
+}
+
 pub struct BFS {
     width: usize,
     height: usize,
@@ -51,45 +90,6 @@ impl BFS {
     pub fn path(&self, start: Point, finish: Point) -> Option<Vec<Point>> {
         if start == finish {
             return Some(vec![start]);
-        }
-
-        #[derive(Debug, Copy, Clone)]
-        struct CellState {
-            #[cfg(feature = "hacky-cell-state")]
-            from: Point, // Point (0, 0) contains wall so is never put in the queue, so is used instead of None
-            #[cfg(not(feature = "hacky-cell-state"))]
-            from: Option<Point>,
-        }
-
-        impl CellState {
-            pub fn unvisited() -> Self {
-                Self {
-                    #[cfg(feature = "hacky-cell-state")]
-                    from: Point::with_index(0),
-                    #[cfg(not(feature = "hacky-cell-state"))]
-                    from: None,
-                }
-            }
-            pub fn new_from(from: Point) -> Self {
-                Self {
-                    #[cfg(feature = "hacky-cell-state")]
-                    from,
-                    #[cfg(not(feature = "hacky-cell-state"))]
-                    from: Some(from),
-                }
-            }
-            pub fn is_visited(&self) -> bool {
-                #[cfg(feature = "hacky-cell-state")]
-                return self.from.index() != 0;
-                #[cfg(not(feature = "hacky-cell-state"))]
-                return self.from.is_some();
-            }
-            pub fn from(&self) -> Point {
-                #[cfg(feature = "hacky-cell-state")]
-                return self.from;
-                #[cfg(not(feature = "hacky-cell-state"))]
-                return self.from.unwrap();
-            }
         }
 
         let mut cell_states: Array2D<CellState> =
