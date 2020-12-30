@@ -1,7 +1,13 @@
+// Because these warnings are annoying when testing different things
+#![allow(dead_code, unused_imports)]
+
 mod array2d;
 mod bfs;
 
+#[cfg(feature = "i32-coords")]
 pub type PointCoord = i32;
+#[cfg(not(feature = "i32-coords"))]
+pub type PointCoord = usize;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct Point(PointCoord, PointCoord);

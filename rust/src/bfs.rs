@@ -5,21 +5,48 @@ use std::cell::RefCell;
 const OFFSETS: &[(isize, isize)] = &[(1, 0), (-1, 0), (0, 1), (0, -1)];
 
 fn neighbors(pos: Point) -> impl Iterator<Item = Point> {
-    OFFSETS.iter().map(move |offset| {
-        // TODO: out of bounds
+    #[cfg(not(feature = "ignore-negative-coords"))]
+    return OFFSETS.iter().filter_map(move |offset| {
+        let x = pos.0 as i32 + offset.0 as i32;
+        let y = pos.1 as i32 + offset.1 as i32;
+        if x < 0 || y < 0 {
+            return None;
+        }
+        Some(Point(x as PointCoord, y as PointCoord))
+    });
+    #[cfg(feature = "ignore-negative-coords")]
+    return OFFSETS.iter().map(move |offset| {
         Point(
             (pos.0 as i32 + offset.0 as i32) as PointCoord,
             (pos.1 as i32 + offset.1 as i32) as PointCoord,
         )
-    })
+    });
+}
+
+struct State {
+    visited: Array2D<bool>,
+    depth: Array2D<i16>,
+}
+
+impl State {
+    fn new(width: usize, height: usize) -> Self {
+        Self {
+            visited: Array2D::filled_with(false, width, height),
+            depth: Array2D::filled_with(-1, width, height),
+        }
+    }
+    fn clear(&mut self) {
+        self.visited.fill(false);
+        self.depth.fill(-1);
+    }
 }
 
 pub struct BFS {
     width: usize,
     height: usize,
     walls: Array2D<bool>,
-    visited: RefCell<Array2D<bool>>,
-    depth: RefCell<Array2D<i16>>,
+    #[cfg(feature = "alloc-state-once")]
+    state: RefCell<State>,
 }
 
 impl BFS {
@@ -28,8 +55,8 @@ impl BFS {
             width,
             height,
             walls: Self::generate_walls(width, height),
-            visited: RefCell::new(Array2D::new_default(width, height)),
-            depth: RefCell::new(Array2D::new_default(width, height)),
+            #[cfg(feature = "alloc-state-once")]
+            state: RefCell::new(State::new(width, height)),
         }
     }
 
@@ -65,44 +92,48 @@ impl BFS {
     }
 
     pub fn path(&self, from: Point, to: Point) -> Vec<Point> {
-        let mut visited = self.visited.borrow_mut();
-        visited.fill(false);
-        let mut depth = self.depth.borrow_mut();
-        depth.fill(-1);
+        #[cfg(feature = "alloc-state-once")]
+        let mut state = {
+            let mut state = self.state.borrow_mut();
+            state.clear();
+            state
+        };
+        #[cfg(not(feature = "alloc-state-once"))]
+        let mut state = State::new(self.width, self.height);
 
-        visited[from] = true;
-        depth[from] = 0;
+        state.visited[from] = true;
+        state.depth[from] = 0;
 
         let mut queue = std::collections::VecDeque::with_capacity(self.width * self.height);
         queue.push_back(from);
         while let Some(pos) = queue.pop_front() {
-            let length = depth[pos];
+            let length = state.depth[pos];
             if pos == to {
                 break;
             }
 
             for new_pos in neighbors(pos) {
-                if visited[new_pos] || self.walls[new_pos] {
+                if state.visited[new_pos] || self.walls[new_pos] {
                     continue;
                 }
-                visited[new_pos] = true;
-                depth[new_pos] = length + 1;
+                state.visited[new_pos] = true;
+                state.depth[new_pos] = length + 1;
                 queue.push_back(new_pos);
             }
         }
 
         // not found
-        if !visited[to] {
+        if !state.visited[to] {
             return Vec::new();
         }
 
         let mut pos = to;
-        let mut result = Vec::with_capacity(depth[pos] as usize);
+        let mut result = Vec::with_capacity(state.depth[pos] as usize);
         result.push(pos);
         while pos != from {
-            let length = depth[pos];
+            let length = state.depth[pos];
             for prev_pos in neighbors(pos) {
-                if depth[prev_pos] == length - 1 {
+                if state.depth[prev_pos] == length - 1 {
                     pos = prev_pos;
                     result.push(pos);
                     break; // push first found point

@@ -39,13 +39,19 @@ impl<T> std::ops::Index<Point> for Array2D<T> {
     type Output = T;
     fn index(&self, pos: Point) -> &T {
         let index: usize = self.index(pos);
-        unsafe { self.inner.get_unchecked(index) }
+        #[cfg(not(feature = "unsafe-indexing"))]
+        return &self.inner[index];
+        #[cfg(feature = "unsafe-indexing")]
+        return unsafe { self.inner.get_unchecked(index) };
     }
 }
 
 impl<T> std::ops::IndexMut<Point> for Array2D<T> {
     fn index_mut(&mut self, pos: Point) -> &mut T {
         let index: usize = self.index(pos);
-        unsafe { self.inner.get_unchecked_mut(index) }
+        #[cfg(not(feature = "unsafe-indexing"))]
+        return &mut self.inner[index];
+        #[cfg(feature = "unsafe-indexing")]
+        return unsafe { self.inner.get_unchecked_mut(index) };
     }
 }
