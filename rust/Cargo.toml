@@ -8,7 +8,8 @@ edition = "2018"
 default = []
 unsafe-indexing = []
 neighbors-ignore-bounds = []
-hacky-collections = []
+hacky-queue = []
+hacky-array2d = []
 point-index = []
 hacky-cell-state = []
 
