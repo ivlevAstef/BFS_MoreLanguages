@@ -1,43 +1,43 @@
 use super::array2d::Array2D;
-use super::{Point, PointCoord};
-use std::cell::RefCell;
+use super::queue::Queue;
+use super::{point, Point};
 
-const OFFSETS: &[(isize, isize)] = &[(1, 0), (-1, 0), (0, 1), (0, -1)];
-
-fn neighbors(pos: Point) -> impl Iterator<Item = Point> {
-    #[cfg(not(feature = "ignore-negative-coords"))]
-    return OFFSETS.iter().filter_map(move |offset| {
-        let x = pos.0 as i32 + offset.0 as i32;
-        let y = pos.1 as i32 + offset.1 as i32;
-        if x < 0 || y < 0 {
-            return None;
-        }
-        Some(Point(x as PointCoord, y as PointCoord))
-    });
-    #[cfg(feature = "ignore-negative-coords")]
-    return OFFSETS.iter().map(move |offset| {
-        Point(
-            (pos.0 as i32 + offset.0 as i32) as PointCoord,
-            (pos.1 as i32 + offset.1 as i32) as PointCoord,
-        )
-    });
+#[derive(Debug, Copy, Clone)]
+struct CellState {
+    #[cfg(feature = "hacky-cell-state")]
+    from: Point, // Point (0, 0) contains wall so is never put in the queue, so is used instead of None
+    #[cfg(not(feature = "hacky-cell-state"))]
+    from: Option<Point>,
 }
 
-struct State {
-    visited: Array2D<bool>,
-    depth: Array2D<i16>,
-}
-
-impl State {
-    fn new(width: usize, height: usize) -> Self {
+impl CellState {
+    pub fn unvisited() -> Self {
         Self {
-            visited: Array2D::filled_with(false, width, height),
-            depth: Array2D::filled_with(-1, width, height),
+            #[cfg(feature = "hacky-cell-state")]
+            from: Point::with_index(0),
+            #[cfg(not(feature = "hacky-cell-state"))]
+            from: None,
         }
     }
-    fn clear(&mut self) {
-        self.visited.fill(false);
-        self.depth.fill(-1);
+    pub fn new_from(from: Point) -> Self {
+        Self {
+            #[cfg(feature = "hacky-cell-state")]
+            from,
+            #[cfg(not(feature = "hacky-cell-state"))]
+            from: Some(from),
+        }
+    }
+    pub fn is_visited(&self) -> bool {
+        #[cfg(feature = "hacky-cell-state")]
+        return self.from.index() != 0;
+        #[cfg(not(feature = "hacky-cell-state"))]
+        return self.from.is_some();
+    }
+    pub fn from(&self) -> Point {
+        #[cfg(feature = "hacky-cell-state")]
+        return self.from;
+        #[cfg(not(feature = "hacky-cell-state"))]
+        return self.from.unwrap();
     }
 }
 
@@ -45,8 +45,6 @@ pub struct BFS {
     width: usize,
     height: usize,
     walls: Array2D<bool>,
-    #[cfg(feature = "alloc-state-once")]
-    state: RefCell<State>,
 }
 
 impl BFS {
@@ -55,22 +53,20 @@ impl BFS {
             width,
             height,
             walls: Self::generate_walls(width, height),
-            #[cfg(feature = "alloc-state-once")]
-            state: RefCell::new(State::new(width, height)),
         }
     }
 
     fn generate_walls(width: usize, height: usize) -> Array2D<bool> {
         let mut walls = Array2D::filled_with(false, width, height);
 
-        for index in 0..width as PointCoord {
-            walls[Point(index, 0)] = true;
-            walls[Point(index, height as PointCoord - 1)] = true;
+        for index in 0..width as point::Coord {
+            walls[Point::new(index, 0)] = true;
+            walls[Point::new(index, height as point::Coord - 1)] = true;
         }
 
-        for index in 0..height as PointCoord {
-            walls[Point(0, index)] = true;
-            walls[Point(width as PointCoord - 1, index)] = true;
+        for index in 0..height as point::Coord {
+            walls[Point::new(0, index)] = true;
+            walls[Point::new(width as point::Coord - 1, index)] = true;
         }
 
         let h = height / 10;
@@ -79,66 +75,57 @@ impl BFS {
         for index in 0..height - h {
             let x = 2 * w;
             let y = index;
-            walls[Point(x as PointCoord, y as PointCoord)] = true;
+            walls[Point::new(x as point::Coord, y as point::Coord)] = true;
         }
 
         for index in h..height {
             let x = 8 * w;
             let y = index;
-            walls[Point(x as PointCoord, y as PointCoord)] = true;
+            walls[Point::new(x as point::Coord, y as point::Coord)] = true;
         }
 
         walls
     }
 
-    pub fn path(&self, from: Point, to: Point) -> Option<Vec<Point>> {
-        #[cfg(feature = "alloc-state-once")]
-        let mut state = {
-            let mut state = self.state.borrow_mut();
-            state.clear();
-            state
-        };
-        #[cfg(not(feature = "alloc-state-once"))]
-        let mut state = State::new(self.width, self.height);
+    pub fn path(&self, start: Point, finish: Point) -> Option<Vec<Point>> {
+        if start == finish {
+            return Some(vec![start]);
+        }
 
-        state.visited[from] = true;
-        state.depth[from] = 0;
+        let mut cell_states: Array2D<CellState> =
+            Array2D::filled_with(CellState::unvisited(), self.width, self.height);
 
-        let mut queue = std::collections::VecDeque::with_capacity(self.width * self.height);
-        queue.push_back(from);
-        while let Some(pos) = queue.pop_front() {
-            let length = state.depth[pos];
-            if pos == to {
+        let mut queue = Queue::new();
+
+        cell_states[start] = CellState::new_from(start);
+        queue.push(start);
+        while let Some(pos) = queue.pop() {
+            if pos == finish {
                 break;
             }
 
-            for new_pos in neighbors(pos) {
-                if state.visited[new_pos] || self.walls[new_pos] {
+            for new_pos in pos.neighbors(self.width, self.height) {
+                if cell_states[new_pos].is_visited() {
                     continue;
                 }
-                state.visited[new_pos] = true;
-                state.depth[new_pos] = length + 1;
-                queue.push_back(new_pos);
+                if self.walls[new_pos] {
+                    continue;
+                }
+                cell_states[new_pos] = CellState::new_from(pos);
+                queue.push(new_pos);
             }
         }
 
-        // not found
-        if !state.visited[to] {
+        if !cell_states[finish].is_visited() {
             return None;
         }
 
-        let mut pos = to;
-        let mut result = Vec::with_capacity(state.depth[pos] as usize);
+        let mut pos = finish;
+        let mut result = Vec::new();
         result.push(pos);
-        while pos != from {
-            let length = state.depth[pos];
-            for prev_pos in neighbors(pos) {
-                if state.depth[prev_pos] == length - 1 {
-                    pos = prev_pos;
-                    result.push(pos);
-                    break; // push first found point
-                }
-            }
+        while pos != start {
+            pos = cell_states[pos].from();
+            result.push(pos);
         }
 
         result.reverse();

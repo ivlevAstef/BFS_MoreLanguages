@@ -1,36 +1,23 @@
-use super::Point;
+use super::{point, Point};
+
+const LENGTH: usize = point::MAX_COORD * point::MAX_COORD;
 
 pub struct Array2D<T> {
-    inner: Vec<T>,
-    width: usize,
-    // Height is not actually used
-    #[allow(dead_code)]
-    height: usize,
+    inner: [T; LENGTH],
 }
 
 impl<T> Array2D<T> {
     fn index(&self, pos: Point) -> usize {
-        pos.0 as usize + self.width * pos.1 as usize
+        pos.index() as usize
     }
 }
 
-impl<T: Default + Clone> Array2D<T> {
-    pub fn new_default(width: usize, height: usize) -> Self {
-        Self::filled_with(T::default(), width, height)
-    }
-}
-
-impl<T: Clone> Array2D<T> {
+impl<T: Copy> Array2D<T> {
     pub fn filled_with(value: T, width: usize, height: usize) -> Self {
+        assert!(width <= point::MAX_COORD);
+        assert!(height <= point::MAX_COORD);
         Self {
-            inner: vec![value; width * height],
-            width,
-            height,
-        }
-    }
-    pub fn fill(&mut self, value: T) {
-        for x in &mut self.inner {
-            x.clone_from(&value);
+            inner: [value; LENGTH],
         }
     }
 }

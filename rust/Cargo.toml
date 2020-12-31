@@ -7,9 +7,11 @@ edition = "2018"
 [features]
 default = []
 unsafe-indexing = []
-alloc-state-once = []
-ignore-negative-coords = []
-i32-coords = []
+neighbors-ignore-bounds = []
+hacky-queue = []
+hacky-array2d = []
+point-index = []
+hacky-cell-state = []
 
 [profile.release]
 lto = "fat"
