@@ -18,5 +18,17 @@ Avg. Time: 2500 ms
 ### Rust (Release, --all-features)
 Avg. Time: 3250 ms
 
+## MacOS 10.15.3 3,6 GHz 8-Core i9700k @Karloid
+
+### Kotlin (JVM, openjdk-11)
+Avg. Time: 11212 ms
+Cpu time: 11580 ms 
+
+### Kotlin (GraalVM 20.3.0)
+Avg. Time: 12292 ms
+Cpu time:  12260 ms
+
+### CPP (Release, -03)
+Avg. Time: 2318 ms 
 
 ## You PC? :)
