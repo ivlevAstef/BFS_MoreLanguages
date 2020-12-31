@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <algorithm>
+#include <cstring>
 #include "BFS.hpp"
 
 BFS::BFS(int width, int height): width(width), height(height) {

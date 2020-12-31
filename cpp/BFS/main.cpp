@@ -21,7 +21,7 @@ void test() {
 
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-    std::cout << "Time: " << elapsed.count();
+    std::cout << "Time: " << elapsed.count() << std::endl;
 }
 
 int main(int argc, const char * argv[]) {
