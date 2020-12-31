@@ -1,14 +1,17 @@
-data class Point(var x: Int, var y: Int)
+@file:Suppress("NOTHING_TO_INLINE")
 
-private val DEFAULT_DEPTH: Short = -1
-private val DEFAULT_QUEUE: Short = 0
+class Point(val x: Int, val y: Int)
 
+private const val DEFAULT_DEPTH: Short = -1
+private const val DEFAULT_QUEUE: Short = 0
 
 class BFS(val width: Int, val height: Int) {
-    private val walls: Array<Boolean> = Array(width * height, { false })
+    private val walls = BooleanArray(width * height) { false }
 
-    val depth: ShortArray = ShortArray(width * height) { DEFAULT_DEPTH }
-    val queue: ShortArray = ShortArray(width * height) { DEFAULT_QUEUE }
+    val cachedPoints = Array(width * height) { Point(it % width, it / width) }
+
+    val depth = ShortArray(width * height) { DEFAULT_DEPTH }
+    val queue = ShortArray(width * height) { DEFAULT_QUEUE }
 
     fun generateWalls() {
         for (index in 0 until width * height) {
@@ -42,7 +45,7 @@ class BFS(val width: Int, val height: Int) {
         // for optimize use index not Point.
         val fromIndex = from.x + from.y * width
         val toIndex = to.x + to.y * width
-        val offsets = shortArrayOf(1, -1, width.toShort(), (-width).toShort())
+        val offsets = shortArrayOf(1, -1, width.toShort(), (-width).toShort())  //performs better as local variable
 
         // fill use bfs
         depth.setAll(DEFAULT_DEPTH)
@@ -79,7 +82,7 @@ class BFS(val width: Int, val height: Int) {
         // make path
 
         val pathLength = depth[toIndex] + 1
-        val result = Array(pathLength, { to })
+        val result = Array(pathLength) { to }
         var resultIndex = pathLength - 2
 
         var index = toIndex
@@ -90,7 +93,7 @@ class BFS(val width: Int, val height: Int) {
                 val nIndex = index + offset
                 if (depth[nIndex] == nLength) {
                     index = nIndex
-                    result[resultIndex--] = Point(index % width, index / width)
+                    result[resultIndex--] = cachedPoints[index]
                     break // push first found point.
                 }
             }
@@ -98,9 +101,13 @@ class BFS(val width: Int, val height: Int) {
 
         return result
     }
+
+    inline fun getPoint(x: Int, y: Int): Point {
+        return cachedPoints[x + y * width]
+    }
 }
 
-private fun ShortArray.setAll(value: Short) {
+private inline fun ShortArray.setAll(value: Short) {
     repeat(size) {
         set(it, value)
     }

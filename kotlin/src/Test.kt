@@ -1,23 +1,22 @@
 
 class Test {
-    private fun accelerate() {
-        val bfsAccelerate = BFS(width = 100, height = 100)
-        bfsAccelerate.generateWalls()
+    private fun warmUp() {
+        val bfs = BFS(width = 100, height = 100)
+        bfs.generateWalls()
         for (index in 0 until 10000) {
-            val result = bfsAccelerate.path(Point(1, 1), Point(98, 98))
+            val result = bfs.path(bfs.getPoint(1, 1), bfs.getPoint(98, 98))
         }
+        Thread.sleep(2_000L)
     }
 
     internal fun run() {
-       // accelerate()
-       //
-       // Thread.sleep(2_000L)
+        //warmUp()
 
         val startTime = System.nanoTime()
         val bfs = BFS(width = 100, height = 100)
         bfs.generateWalls()
         for (index in 0 until 100000) {
-            val result = bfs.path(Point(1, 1), Point(98, 98))
+            val result = bfs.path(bfs.getPoint(1, 1), bfs.getPoint(98, 98))
         }
         val endTime = System.nanoTime()
 
