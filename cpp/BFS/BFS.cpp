@@ -13,7 +13,6 @@
 BFS::BFS(int width, int height): width(width), height(height) {
     walls = (bool*)calloc(width * height, sizeof(bool));
     depth = (int16_t*)calloc(width * height, sizeof(int16_t));
-
     queue = (int16_t*)calloc(width * height, sizeof(int16_t));
 }
 
@@ -62,18 +61,16 @@ std::vector<Point> BFS::path(Point from, Point to) {
             break;
         }
 
-        const int32_t& length = depth[index];
+        const int32_t length = depth[index];
         ++queueIter;
 
-        for (const int16_t& offset : offsets) {
+        for (const int16_t offset : offsets) {
             const int16_t nextIndex = index + offset;
 
-            if (depth[nextIndex] >= 0 || walls[nextIndex]) {
-                continue;
+            if (depth[nextIndex] < 0 && !walls[nextIndex]) {
+                depth[nextIndex] = length + 1;
+                queue[queueEnd++] = nextIndex;
             }
-            depth[nextIndex] = length + 1;
-
-            queue[queueEnd++] = nextIndex;
         }
     }
 
@@ -85,13 +82,13 @@ std::vector<Point> BFS::path(Point from, Point to) {
     int16_t index = queue[queueIter];
 
     std::vector<Point> result;
-    result.reserve(depth[index]);
+    result.reserve(depth[index] + 1);
+    result.push_back(to);
 
-    result.push_back({index % width, index / width});
     while (index != fromIndex) {
-        const int32_t& length = depth[index];
+        const int32_t length = depth[index];
 
-        for (const int16_t& offset : offsets) {
+        for (const int16_t offset : offsets) {
             const int16_t nextIndex = index + offset;
             if (depth[nextIndex] == length - 1) {
                 index = nextIndex;

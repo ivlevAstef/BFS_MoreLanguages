@@ -21,5 +21,4 @@ func runBfs() {
     print("Time: \(time)")
 }
 
-
 runBfs()

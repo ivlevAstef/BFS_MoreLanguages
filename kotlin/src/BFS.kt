@@ -1,9 +1,7 @@
-data class Point(val x: Int, val y: Int)
+data class Point(var x: Int, var y: Int)
 
 class BFS(val width: Int, val height: Int) {
     private val walls: Array<Boolean> = Array(width * height, { false })
-    private val visited: Array<Boolean> = Array(width * height, { false })
-    private val depth: Array<Int> = Array(width * height, { 0 })
 
     fun generateWalls() {
         for (index in 0 until width * height) {
@@ -32,67 +30,64 @@ class BFS(val width: Int, val height: Int) {
         }
     }
 
-    fun path(from: Point, to: Point): List<Point>? {
-        val offsets = arrayOf(Point(1, 0), Point(-1, 0), Point(0, 1), Point(0, -1))
+    fun path(from: Point, to: Point): Array<Point>? {
+        // for optimize use index not Point.
+        val fromIndex = from.x + from.y * width
+        val toIndex = to.x + to.y * width
+        val offsets = arrayOf(1, -1, width, -width)
+
         // fill use bfs
+        val depth: Array<Short> = Array(width * height, { -1 })
+        depth[fromIndex] = 0
 
-        for (index in 0 until width * height) {
-            visited[index] = false
-            depth[index] = -1
-        }
-        visited[from.x + from.y * width] = true
-        depth[from.x + from.y * width] = 0
-
-        val queue = mutableListOf(from)
+        val queue: Array<Short> = Array(width * height, { 0 })
+        queue[0] = fromIndex.toShort()
         var queueIter = 0
+        var queueEnd = 1
 
-        while (queueIter < queue.count()) {
-            val pos = queue[queueIter]
-
-            if (to.x == pos.x && to.y == pos.y) {
+        while (queueIter < queueEnd) {
+            val index = queue[queueIter].toInt()
+            if (index == toIndex) {
                 break
             }
-
             queueIter += 1
 
-            val length = depth[pos.x + pos.y * width]
+            val nLength = (depth[index] + 1).toShort()
             for (offset in offsets) {
-                val nX = pos.x + offset.x
-                val nY = pos.y + offset.y
-                if (visited[nX + nY * width] || walls[nX + nY * width]) {
+                val nIndex = index + offset
+                if (depth[nIndex] >= 0 || walls[nIndex]) {
                     continue
                 }
-                visited[nX + nY * width] = true
-
-                queue.add(Point(nX, nY))
-                depth[nX + nY * width] = length + 1
+                depth[nIndex] = nLength
+                queue[queueEnd] = nIndex.toShort()
+                queueEnd += 1
             }
         }
 
-        if (queueIter == queue.count()) { // not found
+        if (queueIter == queueEnd) { // not found
             return null
         }
 
         // make path
 
-        val result = mutableListOf<Point>()
-        result.add(to)
+        val pathLength = depth[toIndex] + 1
+        val result = Array(pathLength, { to })
+        var resultIndex = pathLength - 2
 
-        var pos = result.last()
-        while (pos.x != from.x || pos.y != from.y) {
-            val length = depth[pos.x + pos.y * width]
+        var index = toIndex
+        while (index != fromIndex) {
+            val nLength = (depth[index] - 1).toShort()
 
             for (offset in offsets) {
-                val nX = pos.x + offset.x
-                val nY = pos.y + offset.y
-                if (depth[nX + nY * width] == length - 1) {
-                    pos = Point(nX, nY)
-                    result.add(pos)
+                val nIndex = index + offset
+                if (depth[nIndex] == nLength) {
+                    index = nIndex
+                    result[resultIndex--] = Point(index % width, index / width)
                     break // push first found point.
                 }
             }
         }
 
-        return result.reversed()
+        return result
     }
 }

@@ -11,7 +11,7 @@ class Test {
     internal fun run() {
         accelerate()
 
-        Thread.sleep(5000L)
+        Thread.sleep(2000L)
 
         val startTime = System.nanoTime()
         val bfs = BFS(width = 100, height = 100)

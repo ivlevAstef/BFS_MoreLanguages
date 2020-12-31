@@ -18,7 +18,7 @@ final class BFS {
 
     private let walls: UnsafeMutableBufferPointer<Bool>
     private let depth: UnsafeMutableBufferPointer<Int16>
-    private let queue: UnsafeMutableBufferPointer<Int>
+    private let queue: UnsafeMutableBufferPointer<Int32>
 
     init(width: Int, height: Int) {
         self.width = width
@@ -64,28 +64,26 @@ final class BFS {
         depth.assign(repeating: -1)
         depth[fromIndex] = 0
 
-        queue[0] = fromIndex
+        queue[0] = Int32(fromIndex)
         var queueIter = 0
         var queueEnd = 1
 
         while queueIter < queueEnd {
-            let index = queue[queueIter]
+            let index = Int(queue[queueIter])
             if toIndex == index {
                 break
             }
 
             queueIter += 1
-            let length = depth[index]
+            let nextLength = depth[index] + 1
 
-            for offset in offsets {
-                let nextIndex = index + offset
-                if depth[nextIndex] >= 0 || walls[nextIndex] {
-                    continue
+            offsets.forEach {
+                let nextIndex = index + $0
+                if depth[nextIndex] < 0 && !walls[nextIndex] {
+                    depth[nextIndex] = nextLength
+                    queue[queueEnd] = Int32(nextIndex)
+                    queueEnd += 1
                 }
-                depth[nextIndex] = length + 1
-
-                queue[queueEnd] = nextIndex
-                queueEnd += 1
             }
         }
 
@@ -95,25 +93,20 @@ final class BFS {
 
         // Make path
 
-        var index = queue[queueIter]
+        var result = [Point](repeating: to, count: Int(depth[toIndex]) + 1)
+        var resultIndex = result.count - 2
 
-        var result = ContiguousArray<Point>()
-        result.reserveCapacity(Int(depth[index]))
-        result.append(Point(x: index % width, y: index / width))
-
+        var index = toIndex
         while index != fromIndex {
-            let length = depth[index]
+            let nextLength = depth[index] - 1
 
-            for offset in offsets {
-                let nextIndex = index + offset
-                if depth[nextIndex] == length - 1 {
-                    index = nextIndex
-                    result.append(Point(x: index % width, y: index / width))
-                    break // push first found point.
-                }
+            if let offset = offsets.first(where: { depth[index + $0] == nextLength }) {
+                index = index + offset
+                result[resultIndex] = Point(x: index % width, y: index / width)
+                resultIndex -= 1
             }
         }
 
-        return result.reversed()
+        return result
     }
 }
