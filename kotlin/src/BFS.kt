@@ -1,7 +1,14 @@
 data class Point(var x: Int, var y: Int)
 
+private val DEFAULT_DEPTH: Short = -1
+private val DEFAULT_QUEUE: Short = 0
+
+
 class BFS(val width: Int, val height: Int) {
     private val walls: Array<Boolean> = Array(width * height, { false })
+
+    val depth: ShortArray = ShortArray(width * height) { DEFAULT_DEPTH }
+    val queue: ShortArray = ShortArray(width * height) { DEFAULT_QUEUE }
 
     fun generateWalls() {
         for (index in 0 until width * height) {
@@ -30,17 +37,18 @@ class BFS(val width: Int, val height: Int) {
         }
     }
 
+
     fun path(from: Point, to: Point): Array<Point>? {
         // for optimize use index not Point.
         val fromIndex = from.x + from.y * width
         val toIndex = to.x + to.y * width
-        val offsets = arrayOf(1, -1, width, -width)
+        val offsets = shortArrayOf(1, -1, width.toShort(), (-width).toShort())
 
         // fill use bfs
-        val depth: Array<Short> = Array(width * height, { -1 })
+        depth.setAll(DEFAULT_DEPTH)
         depth[fromIndex] = 0
 
-        val queue: Array<Short> = Array(width * height, { 0 })
+        queue.setAll(DEFAULT_QUEUE)
         queue[0] = fromIndex.toShort()
         var queueIter = 0
         var queueEnd = 1
@@ -89,5 +97,11 @@ class BFS(val width: Int, val height: Int) {
         }
 
         return result
+    }
+}
+
+private fun ShortArray.setAll(value: Short) {
+    repeat(size) {
+        set(it, value)
     }
 }
