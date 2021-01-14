@@ -6,8 +6,8 @@ On one run: path founds from (1,1) to (98,98)
 
 ## Mac Mini 2018 3,2 GHz 6-Core Intel Core i7
 
-### Kotlin (JVM, openjdk-15) (outdated)
-Avg. Time: 14500 ms
+### Kotlin (JVM, openjdk-15)
+Avg. Time: 5600 ms
 
 ### Swift usage Unsafe API, (Release, -O, SWIFT_DISABLE_SAFETY_CHECKS = YES)
 Avg. Time: 2600 ms
